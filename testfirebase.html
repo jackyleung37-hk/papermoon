@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Write Test</title>
-    <!-- 引入 Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
+    <title>2Firebase Write Test</title>
+    <!-- 使用 Firebase v9.6.0 相容模式 -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <h1>Firebase Write Test</h1>
@@ -26,11 +26,12 @@
         };
 
         // 初始化 Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        firebase.initializeApp(firebaseConfig);
+        console.log('Firebase initialized:', firebase.app().name); // 應顯示 [DEFAULT]
 
         // 寫入測試資料
         function writeTestData() {
+            const database = firebase.database();
             database.ref('testData/' + Date.now()).set({
                 test: "Hello Firebase"
             }).then(() => {
