@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Location Filter</title>
+    <!-- Firebase JS SDK (v9.6.0 相容模式) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            max-width: 100%;
+        }
+        h1 { text-align: center; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 8px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        #addBtn { background: #4CAF50; width: 100%; }
+        #addBtn:hover { background: #45a049; }
+        #showAllBtn { background: #2196F3; }
+        #showAllBtn:hover { background: #1e88e5; }
+        #filterMonthBtn { background: #0288D1; }
+        #filterMonthBtn:hover { background: #0277bd; }
+        #filterLocationBtn { background: #F06292; }
+        #filterLocationBtn:hover { background: #ec407a; }
+        #filterTypeBtn { background: #FFA000; }
+        #filterTypeBtn:hover { background: #fb8c00; }
+        #output { margin-top: 20px; }
+        #status { color: #888; text-align: center; margin-top: 10px; }
+        .filter-group { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Location Filter App</h1>
+        <select id="monthSelect">
+            <option value="">Select Month</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select>
+        <input type="url" id="urlInput" placeholder="Enter URL...">
+        <input type="date" id="shootingDateInput" placeholder="Shooting Date">
+        <select id="locationSelect">
+            <option value="">Select Location (Mountain/City)</option>
+            <option value="Hong Kong Island">Hong Kong Island</option>
+            <option value="Kowloon">Kowloon</option>
+            <option value="New Territories">New Territories</option>
+            <option value="Lantau Island">Lantau Island</option>
+            <option value="Tai Mo Shan">Tai Mo Shan</option>
+            <!-- Add more options as needed -->
+        </select>
+        <select id="typeSelect">
+            <option value="">Select Type</option>
+            <option value="sunset">Sunset</option>
+            <option value="sunrise">Sunrise</option>
+            <option value="night_view">Night View</option>
+            <option value="starry_sky">Starry Sky</option>
+        </select>
+        <input type="url" id="mapPinInput" placeholder="Enter Google Map Pin URL...">
+        <button id="addBtn" onclick="addLocation()">Add Location</button>
+
+        <div class="filter-group">
+            <button id="showAllBtn" onclick="showAll()">Show All</button>
+        </div>
+        <div class="filter-group">
+            <select id="filterMonthSelect">
+                <option value="">Select Month to Filter</option>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+            <button id="filterMonthBtn" onclick="filterByMonth()">Filter by Month</button>
+        </div>
+        <div class="filter-group">
+            <select id="filterLocationSelect">
+                <option value="">Select Location to Filter</option>
+                <option value="Hong Kong Island">Hong Kong Island</option>
+                <option value="Kowloon">Kowloon</option>
+                <option value="New Territories">New Territories</option>
+                <option value="Lantau Island">Lantau Island</option>
+                <option value="Tai Mo Shan">Tai Mo Shan</option>
+                <!-- Add more options as needed -->
+            </select>
+            <button id="filterLocationBtn" onclick="filterByLocation()">Filter by Location</button>
+        </div>
+        <div class="filter-group">
+            <select id="filterTypeSelect">
+                <option value="">Select Type to Filter</option>
+                <option value="sunset">Sunset</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="night_view">Night View</option>
+                <option value="starry_sky">Starry Sky</option>
+            </select>
+            <button id="filterTypeBtn" onclick="filterByType()">Filter by Type</button>
+        </div>
+
+        <div id="output"></div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
+            authDomain: "myapp-test37.firebaseapp.com",
+            databaseURL: "https://myapp-test37-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "myapp-test37",
+            storageBucket: "myapp-test37.firebasestorage.app",
+            messagingSenderId: "1012430533501",
+            appId: "1:1012430533501:web:4a6be66b2c39b219149214",
+            measurementId: "G-GJVS2NNGF2"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const locationsRef = database.ref('locations');
+
+        // 添加位置
+        function addLocation() {
+            const month = document.getElementById('monthSelect').value;
+            const url = document.getElementById('urlInput').value.trim();
+            const shootingDate = document.getElementById('shootingDateInput').value;
+            const location = document.getElementById('locationSelect').value;
+            const type = document.getElementById('typeSelect').value;
+            const mapPin = document.getElementById('mapPinInput').value.trim();
+
+            if (!month || !url || !shootingDate || !location || !type || !mapPin) {
+                showStatus('Please fill all fields!', true);
+                return;
+            }
+
+            const newLocation = {
+                month: month,
+                url: url,
+                shooting_date: shootingDate,
+                location: location,
+                type: type,
+                map_pin: mapPin,
+                id: '' // 稍後設置
+            };
+            const newRef = locationsRef.push(); // 自動生成唯一 ID
+            newLocation.id = newRef.key;
+            newRef.set(newLocation)
+                .then(() => {
+                    // 清空輸入
+                    document.getElementById('monthSelect').value = '';
+                    document.getElementById('urlInput').value = '';
+                    document.getElementById('shootingDateInput').value = '';
+                    document.getElementById('locationSelect').value = '';
+                    document.getElementById('typeSelect').value = '';
+                    document.getElementById('mapPinInput').value = '';
+                    showStatus('Location added successfully!');
+                    showAll(); // 添加後顯示所有資料
+                })
+                .catch((error) => {
+                    console.error('Add location failed:', error);
+                    showStatus('Error adding location: ' + error.message, true);
+                });
+        }
+
+        // 顯示所有位置
+        function showAll() {
+            locationsRef.once('value')
+                .then((snapshot) => {
+                    displayLocations(snapshot.val(), 'All Locations');
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showStatus('Error fetching locations: ' + error.message, true);
+                });
+        }
+
+        // 按月份過濾
+        function filterByMonth() {
+            const month = document.getElementById('filterMonthSelect').value;
+            if (!month) {
+                showStatus('Please select a month!', true);
+                return;
+            }
+            locationsRef.orderByChild('month').equalTo(month).once('value')
+                .then((snapshot) => {
+                    displayLocations(snapshot.val(), `Locations in ${month}`);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showStatus('Error filtering by month: ' + error.message, true);
+                });
+        }
+
+        // 按位置過濾
+        function filterByLocation() {
+            const location = document.getElementById('filterLocationSelect').value;
+            if (!location) {
+                showStatus('Please select a location!', true);
+                return;
+            }
+            locationsRef.orderByChild('location').equalTo(location).once('value')
+                .then((snapshot) => {
+                    displayLocations(snapshot.val(), `Locations in ${location}`);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showStatus('Error filtering by location: ' + error.message, true);
+                });
+        }
+
+        // 按類型過濾
+        function filterByType() {
+            const type = document.getElementById('filterTypeSelect').value;
+            if (!type) {
+                showStatus('Please select a type!', true);
+                return;
+            }
+            locationsRef.orderByChild('type').equalTo(type).once('value')
+                .then((snapshot) => {
+                    displayLocations(snapshot.val(), `${type.charAt(0).toUpperCase() + type.slice(1)} Locations`);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showStatus('Error filtering by type: ' + error.message, true);
+                });
+        }
+
+        // 顯示位置資料
+        function displayLocations(data, title) {
+            const output = document.getElementById('output');
+            output.innerHTML = `<h3>${title}</h3>`;
+            if (data) {
+                for (let key in data) {
+                    const loc = data[key];
+                    output.innerHTML += `
+                        <p>
+                            ID: ${loc.id}<br>
+                            Month: ${loc.month}<br>
+                            URL: <a href="${loc.url}" target="_blank">${loc.url}</a><br>
+                            Shooting Date: ${loc.shooting_date}<br>
+                            Location: ${loc.location}<br>
+                            Type: ${loc.type}<br>
+                            Map Pin: <a href="${loc.map_pin}" target="_blank">${loc.map_pin}</a>
+                        </p>
+                        <hr>
+                    `;
+                }
+            } else {
+                output.innerHTML += '<p>No locations found.</p>';
+            }
+        }
+
+        // 顯示狀態訊息
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.color = isError ? 'red' : 'green';
+            setTimeout(() => status.textContent = '', 3000);
+        }
+    </script>
+</body>
+</html>
