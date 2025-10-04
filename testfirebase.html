@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Realtime Database Test</title>
+    <!-- 引入 Firebase SDK (v10.x) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { margin: 10px 0; padding: 8px; }
+        #output { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Test Firebase Realtime Database</h1>
+    <input type="text" id="userInput" placeholder="Enter a name">
+    <button onclick="saveData()">Save to Database</button>
+    <div id="output"><h3>Database Content:</h3></div>
+
+    <script>
+        // 你的 Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
+            authDomain: "myapp-test37.firebaseapp.com",
+            databaseURL: "https://myapp-test37-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "myapp-test37",
+            storageBucket: "myapp-test37.firebasestorage.app",
+            messagingSenderId: "1012430533501",
+            appId: "1:1012430533501:web:4a6be66b2c39b219149214",
+            measurementId: "G-GJVS2NNGF2"
+        };
+
+        // 初始化 Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 寫入資料到 Firebase
+        function saveData() {
+            const userInput = document.getElementById('userInput').value;
+            if (userInput) {
+                database.ref('testData/' + Date.now()).set({
+                    name: userInput
+                }).then(() => {
+                    alert('Data saved successfully!');
+                    document.getElementById('userInput').value = ''; // 清空輸入框
+                }).catch((error) => {
+                    console.error('Error saving data:', error);
+                    alert('Error saving data: ' + error.message);
+                });
+            } else {
+                alert('Please enter a name!');
+            }
+        }
+
+        // 即時監聽並讀取資料
+        database.ref('testData').on('value', (snapshot) => {
+            const data = snapshot.val();
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3>Database Content:</h3>';
+            if (data) {
+                for (let key in data) {
+                    output.innerHTML += `<p>${data[key].name}</p>`;
+                }
+            } else {
+                output.innerHTML += '<p>No data available.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
