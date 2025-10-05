@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Location Filter</title>
+    <title>Firebase Location Filter with AND</title>
     <!-- Firebase JS SDK (v9.6.0 相容模式) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
@@ -44,15 +44,11 @@
         #addBtn:hover { background: #45a049; }
         #showAllBtn { background: #2196F3; }
         #showAllBtn:hover { background: #1e88e5; }
-        #filterMonthBtn { background: #0288D1; }
-        #filterMonthBtn:hover { background: #0277bd; }
-        #filterLocationBtn { background: #F06292; }
-        #filterLocationBtn:hover { background: #ec407a; }
-        #filterTypeBtn { background: #FFA000; }
-        #filterTypeBtn:hover { background: #fb8c00; }
+        #filterBtn { background: #F06292; }
+        #filterBtn:hover { background: #ec407a; }
         #output { margin-top: 20px; }
         #status { color: #888; text-align: center; margin-top: 10px; }
-        .filter-group { margin-top: 20px; }
+        .filter-group { margin-top: 20px; display: flex; align-items: center; gap: 10px; }
     </style>
 </head>
 <body>
@@ -82,7 +78,6 @@
             <option value="New Territories">New Territories</option>
             <option value="Lantau Island">Lantau Island</option>
             <option value="Tai Mo Shan">Tai Mo Shan</option>
-            <!-- Add more options as needed -->
         </select>
         <select id="typeSelect">
             <option value="">Select Type</option>
@@ -94,9 +89,6 @@
         <input type="url" id="mapPinInput" placeholder="Enter Google Map Pin URL...">
         <button id="addBtn" onclick="addLocation()">Add Location</button>
 
-        <div class="filter-group">
-            <button id="showAllBtn" onclick="showAll()">Show All</button>
-        </div>
         <div class="filter-group">
             <select id="filterMonthSelect">
                 <option value="">Select Month to Filter</option>
@@ -113,9 +105,6 @@
                 <option value="November">November</option>
                 <option value="December">December</option>
             </select>
-            <button id="filterMonthBtn" onclick="filterByMonth()">Filter by Month</button>
-        </div>
-        <div class="filter-group">
             <select id="filterLocationSelect">
                 <option value="">Select Location to Filter</option>
                 <option value="Hong Kong Island">Hong Kong Island</option>
@@ -123,11 +112,7 @@
                 <option value="New Territories">New Territories</option>
                 <option value="Lantau Island">Lantau Island</option>
                 <option value="Tai Mo Shan">Tai Mo Shan</option>
-                <!-- Add more options as needed -->
             </select>
-            <button id="filterLocationBtn" onclick="filterByLocation()">Filter by Location</button>
-        </div>
-        <div class="filter-group">
             <select id="filterTypeSelect">
                 <option value="">Select Type to Filter</option>
                 <option value="sunset">Sunset</option>
@@ -135,7 +120,10 @@
                 <option value="night_view">Night View</option>
                 <option value="starry_sky">Starry Sky</option>
             </select>
-            <button id="filterTypeBtn" onclick="filterByType()">Filter by Type</button>
+            <button id="filterBtn" onclick="filterLocations()">Filter</button>
+        </div>
+        <div class="filter-group">
+            <button id="showAllBtn" onclick="showAll()">Show All</button>
         </div>
 
         <div id="output"></div>
@@ -181,13 +169,12 @@
                 location: location,
                 type: type,
                 map_pin: mapPin,
-                id: '' // 稍後設置
+                id: ''
             };
-            const newRef = locationsRef.push(); // 自動生成唯一 ID
+            const newRef = locationsRef.push();
             newLocation.id = newRef.key;
             newRef.set(newLocation)
                 .then(() => {
-                    // 清空輸入
                     document.getElementById('monthSelect').value = '';
                     document.getElementById('urlInput').value = '';
                     document.getElementById('shootingDateInput').value = '';
@@ -195,7 +182,7 @@
                     document.getElementById('typeSelect').value = '';
                     document.getElementById('mapPinInput').value = '';
                     showStatus('Location added successfully!');
-                    showAll(); // 添加後顯示所有資料
+                    showAll();
                 })
                 .catch((error) => {
                     console.error('Add location failed:', error);
@@ -215,54 +202,43 @@
                 });
         }
 
-        // 按月份過濾
-        function filterByMonth() {
+        // 按三個條件過濾 (AND)
+        function filterLocations() {
             const month = document.getElementById('filterMonthSelect').value;
-            if (!month) {
-                showStatus('Please select a month!', true);
-                return;
-            }
-            locationsRef.orderByChild('month').equalTo(month).once('value')
-                .then((snapshot) => {
-                    displayLocations(snapshot.val(), `Locations in ${month}`);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error filtering by month: ' + error.message, true);
-                });
-        }
-
-        // 按位置過濾
-        function filterByLocation() {
             const location = document.getElementById('filterLocationSelect').value;
-            if (!location) {
-                showStatus('Please select a location!', true);
-                return;
-            }
-            locationsRef.orderByChild('location').equalTo(location).once('value')
-                .then((snapshot) => {
-                    displayLocations(snapshot.val(), `Locations in ${location}`);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error filtering by location: ' + error.message, true);
-                });
-        }
-
-        // 按類型過濾
-        function filterByType() {
             const type = document.getElementById('filterTypeSelect').value;
-            if (!type) {
-                showStatus('Please select a type!', true);
+
+            if (!month && !location && !type) {
+                showStatus('Please select at least one filter!', true);
                 return;
             }
-            locationsRef.orderByChild('type').equalTo(type).once('value')
+
+            // 先獲取所有資料，然後在客戶端進行 AND 過濾
+            locationsRef.once('value')
                 .then((snapshot) => {
-                    displayLocations(snapshot.val(), `${type.charAt(0).toUpperCase() + type.slice(1)} Locations`);
+                    const data = snapshot.val();
+                    if (!data) {
+                        displayLocations(null, 'Filtered Locations');
+                        return;
+                    }
+
+                    // 過濾資料
+                    const filteredData = {};
+                    for (let key in data) {
+                        const loc = data[key];
+                        const matchMonth = !month || loc.month === month;
+                        const matchLocation = !location || loc.location === location;
+                        const matchType = !type || loc.type === type;
+                        if (matchMonth && matchLocation && matchType) {
+                            filteredData[key] = loc;
+                        }
+                    }
+
+                    displayLocations(filteredData, 'Filtered Locations');
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    showStatus('Error filtering by type: ' + error.message, true);
+                    showStatus('Error filtering locations: ' + error.message, true);
                 });
         }
 
