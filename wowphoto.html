@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Location Filter with AND</title>
+    <title>Firebase CMS UI</title>
     <!-- Firebase JS SDK (v9.6.0 相容模式) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
@@ -16,12 +16,16 @@
             justify-content: center;
         }
         .container {
-            background: white;
             padding: 20px;
+            width: 600px;
+            max-width: 100%;
+        }
+        .form-container {
+            background: white;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 500px;
-            max-width: 100%;
+            margin-bottom: 20px;
         }
         h1 { text-align: center; color: #333; }
         input, select {
@@ -40,58 +44,49 @@
             cursor: pointer;
             color: white;
         }
-        #addBtn { background: #4CAF50; width: 100%; }
-        #addBtn:hover { background: #45a049; }
-        #showAllBtn { background: #2196F3; }
-        #showAllBtn:hover { background: #1e88e5; }
-        #filterBtn { background: #F06292; }
-        #filterBtn:hover { background: #ec407a; }
+        #saveBtn { background: #4CAF50; width: 100%; }
+        #saveBtn:hover { background: #45a049; }
+        #loginBtn { background: #2196F3; width: 100%; }
+        #loginBtn:hover { background: #1e88e5; }
         #output { margin-top: 20px; }
         #status { color: #888; text-align: center; margin-top: 10px; }
-        .filter-group { margin-top: 20px; display: flex; align-items: center; gap: 10px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f2f2f2; }
+        .action-btn {
+            padding: 5px;
+            margin: 2px;
+            cursor: pointer;
+        }
+        .edit-btn { background: #FFA000; color: white; }
+        .delete-btn { background: #f44336; color: white; }
+        #loginContainer { display: block; }
+        #cmsContainer { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Location Filter App</h1>
-        <select id="monthSelect">
-            <option value="">Select Month</option>
-            <option value="January">January</option>
-            <option value="February">February</option>
-            <option value="March">March</option>
-            <option value="April">April</option>
-            <option value="May">May</option>
-            <option value="June">June</option>
-            <option value="July">July</option>
-            <option value="August">August</option>
-            <option value="September">September</option>
-            <option value="October">October</option>
-            <option value="November">November</option>
-            <option value="December">December</option>
-        </select>
-        <input type="url" id="urlInput" placeholder="Enter URL...">
-        <input type="date" id="shootingDateInput" placeholder="Shooting Date">
-        <select id="locationSelect">
-            <option value="">Select Location (Mountain/City)</option>
-            <option value="Hong Kong Island">Hong Kong Island</option>
-            <option value="Kowloon">Kowloon</option>
-            <option value="New Territories">New Territories</option>
-            <option value="Lantau Island">Lantau Island</option>
-            <option value="Tai Mo Shan">Tai Mo Shan</option>
-        </select>
-        <select id="typeSelect">
-            <option value="">Select Type</option>
-            <option value="sunset">Sunset</option>
-            <option value="sunrise">Sunrise</option>
-            <option value="night_view">Night View</option>
-            <option value="starry_sky">Starry Sky</option>
-        </select>
-        <input type="url" id="mapPinInput" placeholder="Enter Google Map Pin URL...">
-        <button id="addBtn" onclick="addLocation()">Add Location</button>
+    <div class="container" id="loginContainer">
+        <div class="form-container">
+            <h1>CMS Login</h1>
+            <input type="password" id="passwordInput" placeholder="Enter password...">
+            <button id="loginBtn" onclick="login()">Login</button>
+            <div id="status"></div>
+        </div>
+    </div>
 
-        <div class="filter-group">
-            <select id="filterMonthSelect">
-                <option value="">Select Month to Filter</option>
+    <div class="container" id="cmsContainer">
+        <h1>CMS UI - Add/Edit Location</h1>
+        <div class="form-container">
+            <select id="monthSelect">
+                <option value="">Select Month</option>
                 <option value="January">January</option>
                 <option value="February">February</option>
                 <option value="March">March</option>
@@ -105,28 +100,43 @@
                 <option value="November">November</option>
                 <option value="December">December</option>
             </select>
-            <select id="filterLocationSelect">
-                <option value="">Select Location to Filter</option>
+            <input type="url" id="urlInput" placeholder="Enter URL...">
+            <input type="date" id="shootingDateInput" placeholder="Shooting Date">
+            <select id="locationSelect">
+                <option value="">Select Location (Mountain/City)</option>
                 <option value="Hong Kong Island">Hong Kong Island</option>
                 <option value="Kowloon">Kowloon</option>
                 <option value="New Territories">New Territories</option>
                 <option value="Lantau Island">Lantau Island</option>
                 <option value="Tai Mo Shan">Tai Mo Shan</option>
             </select>
-            <select id="filterTypeSelect">
-                <option value="">Select Type to Filter</option>
+            <select id="typeSelect">
+                <option value="">Select Type</option>
                 <option value="sunset">Sunset</option>
                 <option value="sunrise">Sunrise</option>
                 <option value="night_view">Night View</option>
                 <option value="starry_sky">Starry Sky</option>
             </select>
-            <button id="filterBtn" onclick="filterLocations()">Filter</button>
-        </div>
-        <div class="filter-group">
-            <button id="showAllBtn" onclick="showAll()">Show All</button>
+            <input type="url" id="mapPinInput" placeholder="Enter Google Map Pin URL...">
+            <button id="saveBtn" onclick="saveLocation()">Save Location</button>
         </div>
 
-        <div id="output"></div>
+        <h2>Locations Table</h2>
+        <table id="locationsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Month</th>
+                    <th>URL</th>
+                    <th>Shooting Date</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Map Pin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
         <div id="status"></div>
     </div>
 
@@ -148,8 +158,22 @@
         const database = firebase.database();
         const locationsRef = database.ref('locations');
 
-        // 添加位置
-        function addLocation() {
+        let editingId = null; // 用來追蹤是否在編輯模式
+
+        // 密碼驗證
+        function login() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === 'cms1984') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('cmsContainer').style.display = 'block';
+                loadTable(); // 登入後載入表格
+            } else {
+                showStatus('Incorrect password!', true);
+            }
+        }
+
+        // 保存位置 (新增或更新)
+        function saveLocation() {
             const month = document.getElementById('monthSelect').value;
             const url = document.getElementById('urlInput').value.trim();
             const shootingDate = document.getElementById('shootingDateInput').value;
@@ -162,109 +186,128 @@
                 return;
             }
 
-            const newLocation = {
+            const locationData = {
                 month: month,
                 url: url,
                 shooting_date: shootingDate,
                 location: location,
                 type: type,
-                map_pin: mapPin,
-                id: ''
+                map_pin: mapPin
             };
-            const newRef = locationsRef.push();
-            newLocation.id = newRef.key;
-            newRef.set(newLocation)
-                .then(() => {
-                    document.getElementById('monthSelect').value = '';
-                    document.getElementById('urlInput').value = '';
-                    document.getElementById('shootingDateInput').value = '';
-                    document.getElementById('locationSelect').value = '';
-                    document.getElementById('typeSelect').value = '';
-                    document.getElementById('mapPinInput').value = '';
-                    showStatus('Location added successfully!');
-                    showAll();
-                })
-                .catch((error) => {
-                    console.error('Add location failed:', error);
-                    showStatus('Error adding location: ' + error.message, true);
-                });
-        }
 
-        // 顯示所有位置
-        function showAll() {
-            locationsRef.once('value')
-                .then((snapshot) => {
-                    displayLocations(snapshot.val(), 'All Locations');
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error fetching locations: ' + error.message, true);
-                });
-        }
-
-        // 按三個條件過濾 (AND)
-        function filterLocations() {
-            const month = document.getElementById('filterMonthSelect').value;
-            const location = document.getElementById('filterLocationSelect').value;
-            const type = document.getElementById('filterTypeSelect').value;
-
-            if (!month && !location && !type) {
-                showStatus('Please select at least one filter!', true);
-                return;
-            }
-
-            // 先獲取所有資料，然後在客戶端進行 AND 過濾
-            locationsRef.once('value')
-                .then((snapshot) => {
-                    const data = snapshot.val();
-                    if (!data) {
-                        displayLocations(null, 'Filtered Locations');
-                        return;
-                    }
-
-                    // 過濾資料
-                    const filteredData = {};
-                    for (let key in data) {
-                        const loc = data[key];
-                        const matchMonth = !month || loc.month === month;
-                        const matchLocation = !location || loc.location === location;
-                        const matchType = !type || loc.type === type;
-                        if (matchMonth && matchLocation && matchType) {
-                            filteredData[key] = loc;
-                        }
-                    }
-
-                    displayLocations(filteredData, 'Filtered Locations');
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error filtering locations: ' + error.message, true);
-                });
-        }
-
-        // 顯示位置資料
-        function displayLocations(data, title) {
-            const output = document.getElementById('output');
-            output.innerHTML = `<h3>${title}</h3>`;
-            if (data) {
-                for (let key in data) {
-                    const loc = data[key];
-                    output.innerHTML += `
-                        <p>
-                            ID: ${loc.id}<br>
-                            Month: ${loc.month}<br>
-                            URL: <a href="${loc.url}" target="_blank">${loc.url}</a><br>
-                            Shooting Date: ${loc.shooting_date}<br>
-                            Location: ${loc.location}<br>
-                            Type: ${loc.type}<br>
-                            Map Pin: <a href="${loc.map_pin}" target="_blank">${loc.map_pin}</a>
-                        </p>
-                        <hr>
-                    `;
-                }
+            let ref;
+            if (editingId) {
+                // 更新模式
+                ref = locationsRef.child(editingId);
+                ref.update(locationData)
+                    .then(() => {
+                        showStatus('Location updated successfully!');
+                        resetForm();
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Update failed:', error);
+                        showStatus('Error updating location: ' + error.message, true);
+                    });
             } else {
-                output.innerHTML += '<p>No locations found.</p>';
+                // 新增模式
+                ref = locationsRef.push();
+                locationData.id = ref.key;
+                ref.set(locationData)
+                    .then(() => {
+                        showStatus('Location added successfully!');
+                        resetForm();
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Add failed:', error);
+                        showStatus('Error adding location: ' + error.message, true);
+                    });
             }
+        }
+
+        // 載入表格
+        function loadTable() {
+            locationsRef.once('value')
+                .then((snapshot) => {
+                    const tbody = document.querySelector('#locationsTable tbody');
+                    tbody.innerHTML = '';
+                    const data = snapshot.val();
+                    if (data) {
+                        for (let key in data) {
+                            const loc = data[key];
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${key}</td>
+                                <td>${loc.month}</td>
+                                <td><a href="${loc.url}" target="_blank">Link</a></td>
+                                <td>${loc.shooting_date}</td>
+                                <td>${loc.location}</td>
+                                <td>${loc.type}</td>
+                                <td><a href="${loc.map_pin}" target="_blank">Link</a></td>
+                                <td>
+                                    <button class="action-btn edit-btn" onclick="editLocation('${key}')">Edit</button>
+                                    <button class="action-btn delete-btn" onclick="deleteLocation('${key}')">Delete</button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        }
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8">No locations found.</td></tr>';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading table:', error);
+                    showStatus('Error loading locations: ' + error.message, true);
+                });
+        }
+
+        // 編輯位置
+        function editLocation(id) {
+            locationsRef.child(id).once('value')
+                .then((snapshot) => {
+                    const loc = snapshot.val();
+                    if (loc) {
+                        document.getElementById('monthSelect').value = loc.month;
+                        document.getElementById('urlInput').value = loc.url;
+                        document.getElementById('shootingDateInput').value = loc.shooting_date;
+                        document.getElementById('locationSelect').value = loc.location;
+                        document.getElementById('typeSelect').value = loc.type;
+                        document.getElementById('mapPinInput').value = loc.map_pin;
+                        editingId = id;
+                        showStatus('Editing location: ' + id);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error fetching for edit:', error);
+                    showStatus('Error: ' + error.message, true);
+                });
+        }
+
+        // 刪除位置
+        function deleteLocation(id) {
+            if (confirm('Are you sure you want to delete this location?')) {
+                locationsRef.child(id).remove()
+                    .then(() => {
+                        showStatus('Location deleted successfully!');
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Delete failed:', error);
+                        showStatus('Error deleting location: ' + error.message, true);
+                    });
+            }
+        }
+
+        // 重置表單
+        function resetForm() {
+            document.getElementById('monthSelect').value = '';
+            document.getElementById('urlInput').value = '';
+            document.getElementById('shootingDateInput').value = '';
+            document.getElementById('locationSelect').value = '';
+            document.getElementById('typeSelect').value = '';
+            document.getElementById('mapPinInput').value = '';
+            editingId = null;
         }
 
         // 顯示狀態訊息
