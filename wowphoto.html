@@ -19,160 +19,121 @@
       justify-content: center;
       padding: 20px;
     }
-    .container {
-      width: 100%;
-      max-width: 800px;
-    }
-    h1, h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 15px;
-    }
+    .container { width: 100%; max-width: 900px; }
+    h1, h2 { text-align: center; color: #333; margin-bottom: 8px; }
     .form-container {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 20px;
-      margin-bottom: 20px;
+      background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      padding: 16px; margin-bottom: 16px;
     }
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 5px;
-      margin-top: 10px;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    select[multiple] {
-      height: 100px;
-    }
-    button {
-      width: 48%;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      color: #fff;
-      cursor: pointer;
-      margin: 4px 1%;
-    }
-    #saveBtn { background: #4CAF50; }
-    #logoutBtn { background: #f44336; }
-    #saveBtn:hover { background: #43a047; }
-    #logoutBtn:hover { background: #d32f2f; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background: #f2f2f2;
-    }
-    .action-btn {
-      padding: 5px 8px;
-      margin: 2px;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-    }
-    .edit-btn { background: #FFA000; }
-    .delete-btn { background: #f44336; }
-    #status {
-      text-align: center;
-      font-weight: 500;
-      margin-top: 10px;
-    }
+    label { font-weight: 600; display: block; margin: 8px 0 4px; }
+    input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    select[multiple] { min-height: 90px; }
+    .row { display:flex; gap:10px; }
+    .col { flex:1; }
+    .button-row { display:flex; gap:10px; margin-top:10px; }
+    button { flex:1; padding:10px; border:none; border-radius:6px; color:#fff; cursor:pointer; }
+    #saveBtn { background:#4CAF50; } #logoutBtn { background:#f44336; }
+    table { width:100%; border-collapse: collapse; margin-top:12px; background:#fff; }
+    th, td { border:1px solid #eee; padding:8px; font-size:14px; vertical-align:middle; }
+    th { background:#fafafa; }
+    .thumb { width:80px; height:60px; object-fit:cover; border-radius:4px; display:block; }
+    .action-btn { padding:6px 8px; border-radius:4px; color:#fff; border:none; cursor:pointer; margin-right:6px; }
+    .edit-btn { background:#FFA000; } .delete-btn { background:#f44336; }
+    #status { text-align:center; margin-top:8px; font-weight:600; color:#666; min-height:20px; }
   </style>
 </head>
 
 <body>
-  <!-- 登入 -->
+  <!-- Login -->
   <div class="container" id="loginContainer">
     <div class="form-container">
       <h1>CMS Login</h1>
       <input type="email" id="emailInput" placeholder="Email">
       <input type="password" id="passwordInput" placeholder="Password">
-      <button id="loginBtn" onclick="login()">Login</button>
+      <div class="button-row">
+        <button id="loginBtn" onclick="login()" style="background:#2196F3">Login</button>
+      </div>
       <div id="status"></div>
     </div>
   </div>
 
-  <!-- CMS 主介面 -->
+  <!-- CMS -->
   <div class="container" id="cmsContainer" style="display:none;">
     <h1>拍攝地點管理</h1>
     <div class="form-container">
       <label>地點名稱</label>
       <input type="text" id="locationNameInput" placeholder="輸入地點名稱">
 
-      <label>月份 (可多選)</label>
-      <select id="monthSelect" multiple>
-        <option value="January">January</option>
-        <option value="February">February</option>
-        <option value="March">March</option>
-        <option value="April">April</option>
-        <option value="May">May</option>
-        <option value="June">June</option>
-        <option value="July">July</option>
-        <option value="August">August</option>
-        <option value="September">September</option>
-        <option value="October">October</option>
-        <option value="November">November</option>
-        <option value="December">December</option>
-      </select>
+      <div class="row">
+        <div class="col">
+          <label>月份 (可多選)</label>
+          <select id="monthSelect" multiple>
+            <option value="January">January</option><option value="February">February</option>
+            <option value="March">March</option><option value="April">April</option>
+            <option value="May">May</option><option value="June">June</option>
+            <option value="July">July</option><option value="August">August</option>
+            <option value="September">September</option><option value="October">October</option>
+            <option value="November">November</option><option value="December">December</option>
+          </select>
+        </div>
 
-      <label>拍攝類型 (可多選)</label>
-      <select id="typeSelect" multiple>
-        <option value="sunset">Sunset</option>
-        <option value="sunrise">Sunrise</option>
-        <option value="night_view">Night View</option>
-        <option value="starry_sky">Starry Sky</option>
-      </select>
+        <div class="col">
+          <label>拍攝類型 (可多選)</label>
+          <select id="typeSelect" multiple>
+            <option value="sunset">Sunset</option><option value="sunrise">Sunrise</option>
+            <option value="night_view">Night View</option><option value="starry_sky">Starry Sky</option>
+          </select>
+        </div>
+      </div>
 
-      <label>最佳時間</label>
-      <input type="text" id="bestTimeInput" placeholder="例：黃昏 6:30pm 前後">
+      <div class="row">
+        <div class="col">
+          <label>最佳時間</label>
+          <input type="text" id="bestTimeInput" placeholder="例：黃昏 6:30pm 前後">
+        </div>
+        <div class="col">
+          <label>難度</label>
+          <select id="difficultySelect">
+            <option value="">選擇難度</option>
+            <option value="Easy">簡單</option><option value="Medium">中等</option><option value="Hard">困難</option>
+          </select>
+        </div>
+      </div>
 
       <label>攝影提示</label>
-      <textarea id="tipsInput" placeholder="例：建議帶腳架、ND 濾鏡..."></textarea>
+      <textarea id="tipsInput" placeholder="例：建議帶腳架、ND 濾鏡..." rows="3"></textarea>
 
-      <label>天氣條件</label>
-      <input type="text" id="weatherInput" placeholder="例：晴天／微雲最理想">
+      <div class="row">
+        <div class="col">
+          <label>天氣條件</label>
+          <input type="text" id="weatherInput" placeholder="例：晴天／微雲最理想">
+        </div>
+        <div class="col">
+          <label>標籤 (可多選)</label>
+          <select id="tagSelect" multiple>
+            <option value="mountain">Mountain</option><option value="sea">Sea</option>
+            <option value="city">City</option><option value="hidden_spot">Hidden Spot</option>
+            <option value="popular">Popular</option>
+          </select>
+        </div>
+      </div>
 
-      <label>難度</label>
-      <select id="difficultySelect">
-        <option value="">選擇難度</option>
-        <option value="Easy">簡單</option>
-        <option value="Medium">中等</option>
-        <option value="Hard">困難</option>
-      </select>
+      <div class="row">
+        <div class="col">
+          <label>地圖連結 (Google Map Pin)</label>
+          <input type="url" id="mapPinInput" placeholder="輸入 Google Map URL">
+        </div>
+        <div class="col">
+          <label>Image URL (圖片連結)</label>
+          <input type="url" id="imageUrlInput" placeholder="輸入圖片外部連結 (jpg/png) ">
+        </div>
+      </div>
 
-      <label>標籤 (可多選)</label>
-      <select id="tagSelect" multiple>
-        <option value="mountain">Mountain</option>
-        <option value="sea">Sea</option>
-        <option value="city">City</option>
-        <option value="hidden_spot">Hidden Spot</option>
-        <option value="popular">Popular</option>
-      </select>
-
-      <label>地圖連結 (Google Map Pin)</label>
-      <input type="url" id="mapPinInput" placeholder="輸入 Google Map URL">
-
-      <div style="display:flex;justify-content:space-between;">
+      <div class="button-row">
         <button id="saveBtn" onclick="saveLocation()">儲存</button>
         <button id="logoutBtn" onclick="logout()">登出</button>
       </div>
+      <div id="status"></div>
     </div>
 
     <h2>地點列表</h2>
@@ -180,6 +141,7 @@
       <thead>
         <tr>
           <th>ID</th>
+          <th>縮圖</th>
           <th>地點名稱</th>
           <th>月份</th>
           <th>類型</th>
@@ -194,7 +156,7 @@
   </div>
 
   <script>
-    // Firebase 設定
+    // Firebase 設定 (維持原本 key)
     const firebaseConfig = {
       apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
       authDomain: "myapp-test37.firebaseapp.com",
@@ -204,14 +166,13 @@
       messagingSenderId: "1012430533501",
       appId: "1:1012430533501:web:4a6be66b2c39b219149214"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const database = firebase.database();
     const locationsRef = database.ref('locations');
     let editingId = null;
 
-    // 登入狀態監聽
+    // Auth state
     auth.onAuthStateChanged(user => {
       document.getElementById('loginContainer').style.display = user ? 'none' : 'block';
       document.getElementById('cmsContainer').style.display = user ? 'block' : 'none';
@@ -228,7 +189,10 @@
     }
 
     function logout() {
-      auth.signOut().then(() => showStatus("已登出"));
+      auth.signOut().then(() => {
+        resetForm();
+        showStatus("已登出");
+      }).catch(err => showStatus("登出失敗：" + err.message, true));
     }
 
     function saveLocation() {
@@ -241,18 +205,24 @@
       const difficulty = difficultySelect.value;
       const tags = Array.from(tagSelect.selectedOptions).map(o => o.value);
       const mapPin = mapPinInput.value.trim();
+      const imageUrl = imageUrlInput.value.trim();
 
-      if (!name || !months.length || !types.length) {
-        return showStatus("請完整填寫必要欄位", true);
+      if (!name || months.length === 0 || types.length === 0) {
+        return showStatus("請完整填寫：地點名稱、月份、拍攝類型", true);
       }
 
-      const data = { name, months, types, bestTime, tips, weather, difficulty, tags, mapPin };
+      const data = { name, months, types, bestTime, tips, weather, difficulty, tags, mapPin, imageUrl };
       const ref = editingId ? locationsRef.child(editingId) : locationsRef.push();
-      ref.set(data).then(() => {
-        showStatus(editingId ? "更新成功" : "新增成功");
-        editingId = null;
-        loadTable();
-      }).catch(e => showStatus("儲存錯誤：" + e.message, true));
+      if (!editingId) data.id = ref.key;
+
+      ref.set(data)
+        .then(() => {
+          showStatus(editingId ? "更新成功" : "新增成功");
+          editingId = null;
+          resetForm();
+          loadTable();
+        })
+        .catch(e => showStatus("儲存錯誤：" + e.message, true));
     }
 
     function loadTable() {
@@ -260,23 +230,27 @@
         const tbody = document.querySelector('#locationsTable tbody');
         tbody.innerHTML = '';
         const data = snap.val();
-        if (!data) return tbody.innerHTML = '<tr><td colspan="7">無資料</td></tr>';
+        if (!data) return tbody.innerHTML = '<tr><td colspan="8">無資料</td></tr>';
         Object.entries(data).forEach(([id, loc]) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${id}</td>
-            <td>${loc.name || ''}</td>
-            <td>${(loc.months || []).join(', ')}</td>
-            <td>${(loc.types || []).join(', ')}</td>
-            <td>${loc.bestTime || ''}</td>
-            <td>${loc.difficulty || ''}</td>
-            <td>
-              <button class="action-btn edit-btn" onclick="editLocation('${id}')">編輯</button>
-              <button class="action-btn delete-btn" onclick="deleteLocation('${id}')">刪除</button>
-            </td>`;
-          tbody.appendChild(tr);
+          const thumbHtml = loc.imageUrl ? `<a href="${loc.imageUrl}" target="_blank"><img src="${loc.imageUrl}" class="thumb" alt="thumb" onerror="this.style.display='none'"></a>` : '';
+          const months = (loc.months || []).join(', ');
+          const types = (loc.types || []).join(', ');
+          tbody.innerHTML += `
+            <tr>
+              <td>${id}</td>
+              <td>${thumbHtml}</td>
+              <td>${loc.name || ''}</td>
+              <td>${months}</td>
+              <td>${types}</td>
+              <td>${loc.bestTime || ''}</td>
+              <td>${loc.difficulty || ''}</td>
+              <td>
+                <button class="action-btn edit-btn" onclick="editLocation('${id}')">編輯</button>
+                <button class="action-btn delete-btn" onclick="deleteLocation('${id}')">刪除</button>
+              </td>
+            </tr>`;
         });
-      });
+      }).catch(e => showStatus('載入錯誤：' + e.message, true));
     }
 
     function editLocation(id) {
@@ -284,23 +258,18 @@
         const loc = snap.val();
         if (!loc) return;
         locationNameInput.value = loc.name || '';
-        selectMulti(monthSelect, loc.months);
-        selectMulti(typeSelect, loc.types);
+        selectMulti(monthSelect, loc.months || []);
+        selectMulti(typeSelect, loc.types || []);
         bestTimeInput.value = loc.bestTime || '';
         tipsInput.value = loc.tips || '';
         weatherInput.value = loc.weather || '';
         difficultySelect.value = loc.difficulty || '';
-        selectMulti(tagSelect, loc.tags);
+        selectMulti(tagSelect, loc.tags || []);
         mapPinInput.value = loc.mapPin || '';
+        imageUrlInput.value = loc.imageUrl || '';
         editingId = id;
         showStatus("編輯模式中");
-      });
-    }
-
-    function selectMulti(selectElem, values = []) {
-      Array.from(selectElem.options).forEach(opt => {
-        opt.selected = values.includes(opt.value);
-      });
+      }).catch(e => showStatus('讀取錯誤：' + e.message, true));
     }
 
     function deleteLocation(id) {
@@ -308,14 +277,24 @@
       locationsRef.child(id).remove().then(() => {
         showStatus("刪除成功");
         loadTable();
-      });
+      }).catch(e => showStatus("刪除失敗：" + e.message, true));
+    }
+
+    function selectMulti(selectElem, values = []) {
+      Array.from(selectElem.options).forEach(opt => opt.selected = values.includes(opt.value));
+    }
+
+    function resetForm() {
+      document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+      document.querySelectorAll('select').forEach(s => Array.from(s.options).forEach(o => o.selected = false));
+      editingId = null;
     }
 
     function showStatus(msg, isErr = false) {
-      const s = document.getElementById("status");
-      s.style.color = isErr ? "red" : "green";
+      const s = document.getElementById('status');
+      s.style.color = isErr ? 'red' : 'green';
       s.textContent = msg;
-      setTimeout(() => s.textContent = '', 3000);
+      setTimeout(() => { if (s.textContent === msg) s.textContent = ''; }, 3000);
     }
   </script>
 </body>
