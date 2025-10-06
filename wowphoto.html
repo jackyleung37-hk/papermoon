@@ -6,6 +6,7 @@
     <title>Firebase CMS UI</title>
     <!-- Firebase JS SDK (v9.6.0 相容模式) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <style>
         body {
@@ -48,6 +49,8 @@
         #saveBtn:hover { background: #45a049; }
         #loginBtn { background: #2196F3; width: 100%; }
         #loginBtn:hover { background: #1e88e5; }
+        #logoutBtn { background: #f44336; width: 100%; }
+        #logoutBtn:hover { background: #d32f2f; }
         #output { margin-top: 20px; }
         #status { color: #888; text-align: center; margin-top: 10px; }
         table {
@@ -76,7 +79,8 @@
     <div class="container" id="loginContainer">
         <div class="form-container">
             <h1>CMS Login</h1>
-            <input type="password" id="passwordInput" placeholder="Enter password...">
+            <input type="email" id="emailInput" placeholder="Enter email (e.g., admin@yourapp.com)">
+            <input type="password" id="passwordInput" placeholder="Enter password (e.g., cms1984)">
             <button id="loginBtn" onclick="login()">Login</button>
             <div id="status"></div>
         </div>
@@ -119,6 +123,7 @@
             </select>
             <input type="url" id="mapPinInput" placeholder="Enter Google Map Pin URL...">
             <button id="saveBtn" onclick="saveLocation()">Save Location</button>
+            <button id="logoutBtn" onclick="logout()">Logout</button>
         </div>
 
         <h2>Locations Table</h2>
@@ -155,21 +160,53 @@
 
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
         const locationsRef = database.ref('locations');
 
-        let editingId = null; // 用來追蹤是否在編輯模式
+        let editingId = null;
 
-        // 密碼驗證
-        function login() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === 'cms1984') {
+        // 監聽認証狀態
+        auth.onAuthStateChanged((user) => {
+            if (user) {
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('cmsContainer').style.display = 'block';
-                loadTable(); // 登入後載入表格
+                loadTable();
             } else {
-                showStatus('Incorrect password!', true);
+                document.getElementById('loginContainer').style.display = 'block';
+                document.getElementById('cmsContainer').style.display = 'none';
             }
+        });
+
+        // 登入
+        function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            if (!email || !password) {
+                showStatus('Please enter email and password!', true);
+                return;
+            }
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    showStatus('Login successful!');
+                })
+                .catch((error) => {
+                    console.error('Login failed:', error);
+                    showStatus('Error: ' + error.message, true);
+                });
+        }
+
+        // 登出
+        function logout() {
+            auth.signOut()
+                .then(() => {
+                    showStatus('Logged out successfully!');
+                    resetForm();
+                })
+                .catch((error) => {
+                    console.error('Logout failed:', error);
+                    showStatus('Error: ' + error.message, true);
+                });
         }
 
         // 保存位置 (新增或更新)
@@ -197,7 +234,6 @@
 
             let ref;
             if (editingId) {
-                // 更新模式
                 ref = locationsRef.child(editingId);
                 ref.update(locationData)
                     .then(() => {
@@ -210,7 +246,6 @@
                         showStatus('Error updating location: ' + error.message, true);
                     });
             } else {
-                // 新增模式
                 ref = locationsRef.push();
                 locationData.id = ref.key;
                 ref.set(locationData)
