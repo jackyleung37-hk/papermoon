@@ -28,6 +28,13 @@
       font-weight: 700;
       letter-spacing: 1.5px;
     }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin: 30px 0;
+      font-size: 2em;
+      font-weight: 600;
+    }
 
     /* Filter Form */
     .filter-container {
@@ -168,7 +175,7 @@
     .dot.active { background: #fff; }
 
     /* Locations Grid (Photo Album Style) */
-    .locations-grid {
+    .locations-grid, .monthly-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 30px;
@@ -321,6 +328,10 @@
       <div class="carousel-dots" id="carouselDots"></div>
     </div>
 
+    <!-- Monthly Highlights -->
+    <h2>本月景點</h2>
+    <div class="monthly-grid" id="monthlyGrid"></div>
+
     <!-- Filter Form -->
     <div class="filter-container">
       <h3 style="text-align: center; margin-bottom: 20px;">篩選景點</h3>
@@ -362,6 +373,7 @@
     </div>
 
     <!-- Locations Grid -->
+    <h2>所有景點</h2>
     <div class="locations-grid" id="locationsGrid"></div>
 
     <!-- Pagination -->
@@ -388,15 +400,22 @@
     let allLocations = [];
     let filteredLocations = [];
     let popularLocations = [];
+    let monthlyLocations = [];
     let currentPage = 2;
     const itemsPerPage = 10;
     let currentSlide = 0;
+
+    // 獲取當前月份
+    const monthNames = ["January", "February", "March", "April", "May", "June", 
+                        "July", "August", "September", "October", "November", "December"];
+    const currentMonth = monthNames[new Date().getMonth()];
 
     // 載入資料
     locationsRef.once('value').then(snap => {
       const data = snap.val();
       if (!data) {
         document.getElementById('locationsGrid').innerHTML = '<p>無景點資料</p>';
+        document.getElementById('monthlyGrid').innerHTML = '<p>本月無推薦景點</p>';
         document.getElementById('status').textContent = '無景點資料';
         return;
       }
@@ -404,6 +423,7 @@
       allLocations = Object.entries(data).map(([id, loc]) => ({ id, ...loc }));
       filteredLocations = allLocations;
       popularLocations = allLocations.filter(loc => loc.tags && loc.tags.includes('popular'));
+      monthlyLocations = allLocations.filter(loc => loc.months && loc.months.includes(currentMonth)).slice(0, 6);
 
       if (popularLocations.length === 0) {
         document.getElementById('carouselInner').innerHTML = `
@@ -414,6 +434,12 @@
       } else {
         renderCarousel();
         autoSlide();
+      }
+
+      if (monthlyLocations.length === 0) {
+        document.getElementById('monthlyGrid').innerHTML = '<p>本月無推薦景點</p>';
+      } else {
+        renderMonthlyGrid();
       }
 
       const totalPages = Math.ceil(filteredLocations.length / itemsPerPage);
@@ -460,7 +486,36 @@
     function prevSlide() { showSlide(currentSlide - 1); }
     function autoSlide() { setInterval(nextSlide, 5000); }
 
-    // 渲染 Grid
+    // 渲染本月景點
+    function renderMonthlyGrid() {
+      const grid = document.getElementById('monthlyGrid');
+      grid.innerHTML = '';
+      monthlyLocations.forEach(loc => {
+        const card = document.createElement('div');
+        card.className = 'location-card';
+        card.innerHTML = `
+          <img src="${loc.imageUrl || 'https://via.placeholder.com/350x400?text=無圖片'}" alt="${loc.name}">
+          <div class="location-title">
+            <h3>${loc.name || '無名稱'}</h3>
+          </div>
+          <button class="details-toggle" onclick="toggleDetails(this)">查看詳情</button>
+          <div class="details-content">
+            <button class="close-details" onclick="toggleDetails(this.parentElement.previousElementSibling)">×</button>
+            <p><strong>類型：</strong>${loc.types?.map(t => ({sunset:'日落',sunrise:'日出',night_view:'夜景',starry_sky:'星空'}[t]||t)).join(', ')}</p>
+            <p><strong>最佳時間：</strong>${loc.bestTime || '無'}</p>
+            <p><strong>月份：</strong>${loc.months?.map(m => ({January:'一月',February:'二月',March:'三月',April:'四月',May:'五月',June:'六月',July:'七月',August:'八月',September:'九月',October:'十月',November:'十一月',December:'十二月'}[m]||m)).join(', ')}</p>
+            <p><strong>難度：</strong>${loc.difficulty ? {Easy:'簡單',Medium:'中等',Hard:'困難'}[loc.difficulty]||loc.difficulty : '無'}</p>
+            <p><strong>攝影提示：</strong>${loc.tips || '無'}</p>
+            <p><strong>天氣條件：</strong>${loc.weather || '無'}</p>
+            <p><strong>標籤：</strong>${loc.tags?.map(tag => ({mountain:'山景',sea:'海景',city:'城市',hidden_spot:'隱秘地點',popular:'熱門'}[tag]||tag)).join(', ')}</p>
+            <a href="${loc.mapPin}" target="_blank">查看地圖</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 渲染所有景點
     function renderGrid(page) {
       const grid = document.getElementById('locationsGrid');
       grid.innerHTML = '';
