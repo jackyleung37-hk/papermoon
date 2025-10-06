@@ -1,419 +1,275 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>攝影景點管理系統</title>
-    <!-- Firebase JS SDK (v9.6.0 相容模式) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            padding: 20px;
-            width: 700px;
-            max-width: 100%;
-        }
-        .form-container {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        h1 { text-align: center; color: #333; }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        select[multiple] {
-            height: 100px;
-        }
-        button {
-            padding: 8px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-        }
-        #saveBtn { background: #4CAF50; width: 100%; }
-        #saveBtn:hover { background: #45a049; }
-        #loginBtn { background: #2196F3; width: 100%; }
-        #loginBtn:hover { background: #1e88e5; }
-        #logoutBtn { background: #f44336; width: 100%; }
-        #logoutBtn:hover { background: #d32f2f; }
-        #status { color: #888; text-align: center; margin-top: 10px; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th { background-color: #f2f2f2; }
-        .action-btn {
-            padding: 5px;
-            margin: 2px;
-            cursor: pointer;
-        }
-        .edit-btn { background: #FFA000; color: white; }
-        .delete-btn { background: #f44336; color: white; }
-        #loginContainer { display: block; }
-        #cmsContainer { display: none; }
-        .checkbox-group label { margin-right: 10px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase CMS UI</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+.container {
+    width: 700px;
+    max-width: 100%;
+}
+h1, h2 {
+    text-align: center;
+    color: #333;
+    margin: 10px 0;
+}
+.form-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 15px;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+input, select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+button {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    width: 100%;
+}
+#loginBtn { background: #2196F3; }
+#loginBtn:hover { background: #1e88e5; }
+#saveBtn { background: #4CAF50; }
+#saveBtn:hover { background: #45a049; }
+#logoutBtn { background: #f44336; }
+#logoutBtn:hover { background: #d32f2f; }
+.button-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 14px;
+}
+th {
+    background-color: #f2f2f2;
+}
+.action-btn {
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+}
+.edit-btn { background: #FFA000; }
+.delete-btn { background: #f44336; }
+#status {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #888;
+}
+#loginContainer, #cmsContainer {
+    transition: all 0.3s ease;
+}
+</style>
 </head>
 <body>
-    <div class="container" id="loginContainer">
-        <div class="form-container">
-            <h1>管理系統登入</h1>
-            <input type="email" id="emailInput" placeholder="輸入電郵 (例如: admin@yourapp.com)">
-            <input type="password" id="passwordInput" placeholder="輸入密碼 (例如: cms1984)">
-            <button id="loginBtn" onclick="login()">登入</button>
-            <div id="status"></div>
-        </div>
+
+<!-- Login Area -->
+<div class="container" id="loginContainer">
+    <div class="form-container">
+        <h1>CMS Login</h1>
+        <input type="email" id="emailInput" placeholder="Enter email">
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button id="loginBtn" onclick="login()">Login</button>
+        <div id="status"></div>
     </div>
+</div>
 
-    <div class="container" id="cmsContainer">
-        <h1>攝影景點管理 - 新增/編輯</h1>
-        <div class="form-container">
-            <input type="text" id="nameInput" placeholder="地點名稱 (例如: 維多利亞山頂)">
-            <select id="monthsSelect" multiple>
-                <option value="一月">一月</option>
-                <option value="二月">二月</option>
-                <option value="三月">三月</option>
-                <option value="四月">四月</option>
-                <option value="五月">五月</option>
-                <option value="六月">六月</option>
-                <option value="七月">七月</option>
-                <option value="八月">八月</option>
-                <option value="九月">九月</option>
-                <option value="十月">十月</option>
-                <option value="十一月">十一月</option>
-                <option value="十二月">十二月</option>
+<!-- CMS Area -->
+<div class="container" id="cmsContainer" style="display:none;">
+    <h1>CMS - Add / Edit Location</h1>
+    <div class="form-container">
+        <div class="form-grid">
+            <select id="monthSelect">
+                <option value="">Select Month</option>
+                <option>January</option><option>February</option><option>March</option><option>April</option>
+                <option>May</option><option>June</option><option>July</option><option>August</option>
+                <option>September</option><option>October</option><option>November</option><option>December</option>
             </select>
-            <div class="checkbox-group">
-                <label>拍攝類型:</label><br>
-                <label><input type="checkbox" name="types" value="日出"> 日出</label>
-                <label><input type="checkbox" name="types" value="日落"> 日落</label>
-                <label><input type="checkbox" name="types" value="夜景"> 夜景</label>
-                <label><input type="checkbox" name="types" value="星空"> 星空</label>
-            </div>
-            <select id="regionSelect">
-                <option value="">選擇地區</option>
-                <option value="香港島">香港島</option>
-                <option value="九龍">九龍</option>
-                <option value="新界">新界</option>
-                <option value="大嶼山">大嶼山</option>
-                <option value="大帽山">大帽山</option>
+            <input type="date" id="shootingDateInput">
+            <input type="url" id="urlInput" placeholder="Enter URL...">
+            <input type="url" id="mapPinInput" placeholder="Google Map Pin URL...">
+            <select id="locationSelect">
+                <option value="">Select Location</option>
+                <option>Hong Kong Island</option><option>Kowloon</option><option>New Territories</option>
+                <option>Lantau Island</option><option>Tai Mo Shan</option>
             </select>
-            <input type="url" id="photoUrlInput" placeholder="照片 URL (例如: https://example.com/photo.jpg)">
-            <input type="url" id="mapPinInput" placeholder="地圖定位 URL (例如: https://maps.google.com/?q=22.3,114.2)">
-            <input type="date" id="shootingDateInput" placeholder="拍攝日期">
-            <input type="text" id="bestTimeInput" placeholder="最佳時間 (例如: 日落：18:00)">
-            <textarea id="tipsInput" placeholder="攝影提示 (例如: 使用廣角鏡頭)" rows="4"></textarea>
-            <textarea id="weatherInput" placeholder="天氣/條件注意事項 (例如: 需要晴朗天氣)" rows="4"></textarea>
-            <select id="difficultySelect">
-                <option value="">選擇難度</option>
-                <option value="簡單">簡單</option>
-                <option value="中等">中等</option>
-                <option value="困難">困難</option>
+            <select id="typeSelect">
+                <option value="">Select Type</option>
+                <option value="sunset">Sunset</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="night_view">Night View</option>
+                <option value="starry_sky">Starry Sky</option>
             </select>
-            <div class="checkbox-group">
-                <label>標籤:</label><br>
-                <label><input type="checkbox" name="tags" value="城市"> 城市</label>
-                <label><input type="checkbox" name="tags" value="自然"> 自然</label>
-                <label><input type="checkbox" name="tags" value="風景"> 風景</label>
-                <label><input type="checkbox" name="tags" value="季節性"> 季節性</label>
-            </div>
-            <button id="saveBtn" onclick="saveLocation()">保存景點</button>
-            <button id="logoutBtn" onclick="logout()">登出</button>
         </div>
-
-        <h2>景點列表</h2>
-        <table id="locationsTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>名稱</th>
-                    <th>最佳月份</th>
-                    <th>拍攝類型</th>
-                    <th>地區</th>
-                    <th>照片</th>
-                    <th>地圖定位</th>
-                    <th>拍攝日期</th>
-                    <th>最佳時間</th>
-                    <th>攝影提示</th>
-                    <th>天氣/條件</th>
-                    <th>難度</th>
-                    <th>標籤</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <div class="button-row">
+            <button id="saveBtn" onclick="saveLocation()">Save</button>
+            <button id="logoutBtn" onclick="logout()">Logout</button>
+        </div>
         <div id="status"></div>
     </div>
 
-    <script>
-        // Firebase 配置
-        const firebaseConfig = {
-            apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
-            authDomain: "myapp-test37.firebaseapp.com",
-            databaseURL: "https://myapp-test37-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "myapp-test37",
-            storageBucket: "myapp-test37.appspot.com",
-            messagingSenderId: "1012430533501",
-            appId: "1:1012430533501:web:4a6be66b2c39b219149214",
-            measurementId: "G-GJVS2NNGF2"
-        };
+    <h2>Locations Table</h2>
+    <table id="locationsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Month</th>
+                <th>URL</th>
+                <th>Shooting Date</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Map Pin</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
-        // 初始化 Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        const locationsRef = database.ref('locations');
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
+    authDomain: "myapp-test37.firebaseapp.com",
+    databaseURL: "https://myapp-test37-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "myapp-test37",
+    storageBucket: "myapp-test37.firebasestorage.app",
+    messagingSenderId: "1012430533501",
+    appId: "1:1012430533501:web:4a6be66b2c39b219149214",
+    measurementId: "G-GJVS2NNGF2"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+const locationsRef = database.ref('locations');
+let editingId = null;
 
-        let editingId = null;
+auth.onAuthStateChanged(user => {
+    document.getElementById('loginContainer').style.display = user ? 'none' : 'block';
+    document.getElementById('cmsContainer').style.display = user ? 'block' : 'none';
+    if (user) loadTable();
+});
 
-        // 監聽認証狀態
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('loginContainer').style.display = 'none';
-                document.getElementById('cmsContainer').style.display = 'block';
-                loadTable();
-            } else {
-                document.getElementById('loginContainer').style.display = 'block';
-                document.getElementById('cmsContainer').style.display = 'none';
-            }
-        });
-
-        // 登入
-        function login() {
-            const email = document.getElementById('emailInput').value.trim();
-            const password = document.getElementById('passwordInput').value;
-            if (!email || !password) {
-                showStatus('請輸入電郵和密碼！', true);
-                return;
-            }
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    showStatus('登入成功！');
-                })
-                .catch((error) => {
-                    console.error('登入失敗:', error);
-                    showStatus('錯誤: ' + error.message, true);
-                });
+function login() {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) return showStatus('Please enter email and password!', true);
+    auth.signInWithEmailAndPassword(email, password)
+        .then(() => showStatus('Login successful!'))
+        .catch(e => showStatus('Error: ' + e.message, true));
+}
+function logout() {
+    auth.signOut().then(() => {
+        resetForm();
+        showStatus('Logged out successfully!');
+    });
+}
+function saveLocation() {
+    const month = monthSelect.value, url = urlInput.value.trim(),
+          date = shootingDateInput.value, loc = locationSelect.value,
+          type = typeSelect.value, map = mapPinInput.value.trim();
+    if (!month || !url || !date || !loc || !type || !map) return showStatus('Please fill all fields!', true);
+    const data = { month, url, shooting_date: date, location: loc, type, map_pin: map };
+    let ref = editingId ? locationsRef.child(editingId) : locationsRef.push();
+    if (!editingId) data.id = ref.key;
+    ref.set(data).then(() => {
+        showStatus(editingId ? 'Updated!' : 'Added!');
+        resetForm(); loadTable(); editingId = null;
+    }).catch(e => showStatus('Error: ' + e.message, true));
+}
+function loadTable() {
+    locationsRef.once('value').then(snap => {
+        const tbody = document.querySelector('#locationsTable tbody');
+        tbody.innerHTML = '';
+        const data = snap.val();
+        if (!data) return tbody.innerHTML = '<tr><td colspan="8">No data found.</td></tr>';
+        for (let id in data) {
+            const d = data[id];
+            tbody.innerHTML += `
+                <tr>
+                    <td>${id}</td>
+                    <td>${d.month}</td>
+                    <td><a href="${d.url}" target="_blank">Link</a></td>
+                    <td>${d.shooting_date}</td>
+                    <td>${d.location}</td>
+                    <td>${d.type}</td>
+                    <td><a href="${d.map_pin}" target="_blank">Link</a></td>
+                    <td>
+                        <button class="action-btn edit-btn" onclick="editLocation('${id}')">Edit</button>
+                        <button class="action-btn delete-btn" onclick="deleteLocation('${id}')">Delete</button>
+                    </td>
+                </tr>`;
         }
-
-        // 登出
-        function logout() {
-            auth.signOut()
-                .then(() => {
-                    showStatus('登出成功！');
-                    resetForm();
-                })
-                .catch((error) => {
-                    console.error('登出失敗:', error);
-                    showStatus('錯誤: ' + error.message, true);
-                });
-        }
-
-        // 保存景點
-        function saveLocation() {
-            const name = document.getElementById('nameInput').value.trim();
-            const months = Array.from(document.getElementById('monthsSelect').selectedOptions).map(opt => opt.value);
-            const types = Array.from(document.querySelectorAll('input[name="types"]:checked')).map(el => el.value);
-            const region = document.getElementById('regionSelect').value;
-            const photoUrl = document.getElementById('photoUrlInput').value.trim();
-            const mapPin = document.getElementById('mapPinInput').value.trim();
-            const shootingDate = document.getElementById('shootingDateInput').value;
-            const bestTime = document.getElementById('bestTimeInput').value.trim();
-            const tips = document.getElementById('tipsInput').value.trim();
-            const weather = document.getElementById('weatherInput').value.trim();
-            const difficulty = document.getElementById('difficultySelect').value;
-            const tags = Array.from(document.querySelectorAll('input[name="tags"]:checked')).map(el => el.value);
-
-            if (!name || months.length === 0 || types.length === 0 || !region || !mapPin) {
-                showStatus('請填寫所有必填欄位（名稱、最佳月份、拍攝類型、地區、地圖定位）！', true);
-                return;
-            }
-
-            const locationData = {
-                name,
-                months,
-                types,
-                region,
-                photo_url: photoUrl || null,
-                map_pin: mapPin,
-                shooting_date: shootingDate || null,
-                best_time: bestTime || null,
-                tips: tips || null,
-                weather: weather || null,
-                difficulty: difficulty || null,
-                tags: tags.length ? tags : null
-            };
-
-            let ref;
-            if (editingId) {
-                ref = locationsRef.child(editingId);
-                ref.update(locationData)
-                    .then(() => {
-                        showStatus('景點更新成功！');
-                        resetForm();
-                        loadTable();
-                    })
-                    .catch((error) => {
-                        console.error('更新失敗:', error);
-                        showStatus('錯誤更新景點: ' + error.message, true);
-                    });
-            } else {
-                ref = locationsRef.push();
-                locationData.id = ref.key;
-                ref.set(locationData)
-                    .then(() => {
-                        showStatus('景點新增成功！');
-                        resetForm();
-                        loadTable();
-                    })
-                    .catch((error) => {
-                        console.error('新增失敗:', error);
-                        showStatus('錯誤新增景點: ' + error.message, true);
-                    });
-            }
-        }
-
-        // 載入表格
-        function loadTable() {
-            locationsRef.once('value')
-                .then((snapshot) => {
-                    const tbody = document.querySelector('#locationsTable tbody');
-                    tbody.innerHTML = '';
-                    const data = snapshot.val();
-                    if (data) {
-                        for (let key in data) {
-                            const loc = data[key];
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${key}</td>
-                                <td>${loc.name}</td>
-                                <td>${loc.months.join(', ')}</td>
-                                <td>${loc.types.join(', ')}</td>
-                                <td>${loc.region}</td>
-                                <td>${loc.photo_url ? `<a href="${loc.photo_url}" target="_blank">查看</a>` : '無'}</td>
-                                <td><a href="${loc.map_pin}" target="_blank">連結</a></td>
-                                <td>${loc.shooting_date || '無'}</td>
-                                <td>${loc.best_time || '無'}</td>
-                                <td>${loc.tips || '無'}</td>
-                                <td>${loc.weather || '無'}</td>
-                                <td>${loc.difficulty || '無'}</td>
-                                <td>${loc.tags ? loc.tags.join(', ') : '無'}</td>
-                                <td>
-                                    <button class="action-btn edit-btn" onclick="editLocation('${key}')">編輯</button>
-                                    <button class="action-btn delete-btn" onclick="deleteLocation('${key}')">刪除</button>
-                                </td>
-                            `;
-                            tbody.appendChild(row);
-                        }
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="14">無景點資料</td></tr>';
-                    }
-                })
-                .catch((error) => {
-                    console.error('載入表格失敗:', error);
-                    showStatus('錯誤載入景點: ' + error.message, true);
-                });
-        }
-
-        // 編輯景點
-        function editLocation(id) {
-            locationsRef.child(id).once('value')
-                .then((snapshot) => {
-                    const loc = snapshot.val();
-                    if (loc) {
-                        document.getElementById('nameInput').value = loc.name;
-                        const monthsSelect = document.getElementById('monthsSelect');
-                        Array.from(monthsSelect.options).forEach(opt => {
-                            opt.selected = loc.months.includes(opt.value);
-                        });
-                        document.querySelectorAll('input[name="types"]').forEach(el => {
-                            el.checked = loc.types.includes(el.value);
-                        });
-                        document.getElementById('regionSelect').value = loc.region;
-                        document.getElementById('photoUrlInput').value = loc.photo_url || '';
-                        document.getElementById('mapPinInput').value = loc.map_pin;
-                        document.getElementById('shootingDateInput').value = loc.shooting_date || '';
-                        document.getElementById('bestTimeInput').value = loc.best_time || '';
-                        document.getElementById('tipsInput').value = loc.tips || '';
-                        document.getElementById('weatherInput').value = loc.weather || '';
-                        document.getElementById('difficultySelect').value = loc.difficulty || '';
-                        document.querySelectorAll('input[name="tags"]').forEach(el => {
-                            el.checked = loc.tags && loc.tags.includes(el.value);
-                        });
-                        editingId = id;
-                        showStatus('正在編輯景點: ' + id);
-                    }
-                })
-                .catch((error) => {
-                    console.error('獲取編輯資料失敗:', error);
-                    showStatus('錯誤: ' + error.message, true);
-                });
-        }
-
-        // 刪除景點
-        function deleteLocation(id) {
-            if (confirm('確定要刪除此景點？')) {
-                locationsRef.child(id).remove()
-                    .then(() => {
-                        showStatus('景點刪除成功！');
-                        loadTable();
-                    })
-                    .catch((error) => {
-                        console.error('刪除失敗:', error);
-                        showStatus('錯誤刪除景點: ' + error.message, true);
-                    });
-            }
-        }
-
-        // 重置表單
-        function resetForm() {
-            document.getElementById('nameInput').value = '';
-            document.getElementById('monthsSelect').value = [];
-            document.querySelectorAll('input[name="types"]').forEach(el => el.checked = false);
-            document.getElementById('regionSelect').value = '';
-            document.getElementById('photoUrlInput').value = '';
-            document.getElementById('mapPinInput').value = '';
-            document.getElementById('shootingDateInput').value = '';
-            document.getElementById('bestTimeInput').value = '';
-            document.getElementById('tipsInput').value = '';
-            document.getElementById('weatherInput').value = '';
-            document.getElementById('difficultySelect').value = '';
-            document.querySelectorAll('input[name="tags"]').forEach(el => el.checked = false);
-            editingId = null;
-        }
-
-        // 顯示狀態訊息
-        function showStatus(message, isError = false) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.style.color = isError ? 'red' : 'green';
-            setTimeout(() => status.textContent = '', 3000);
-        }
-    </script>
+    });
+}
+function editLocation(id) {
+    locationsRef.child(id).once('value').then(snap => {
+        const d = snap.val();
+        if (!d) return;
+        monthSelect.value = d.month;
+        urlInput.value = d.url;
+        shootingDateInput.value = d.shooting_date;
+        locationSelect.value = d.location;
+        typeSelect.value = d.type;
+        mapPinInput.value = d.map_pin;
+        editingId = id;
+        showStatus('Editing...');
+    });
+}
+function deleteLocation(id) {
+    if (!confirm('Delete this record?')) return;
+    locationsRef.child(id).remove().then(() => {
+        showStatus('Deleted!');
+        loadTable();
+    });
+}
+function resetForm() {
+    document.querySelectorAll('input, select').forEach(el => el.value = '');
+    editingId = null;
+}
+function showStatus(msg, err=false) {
+    const s = document.getElementById('status');
+    s.textContent = msg;
+    s.style.color = err ? 'red' : 'green';
+    setTimeout(() => s.textContent = '', 3000);
+}
+</script>
 </body>
 </html>
