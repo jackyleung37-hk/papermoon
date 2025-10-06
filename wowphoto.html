@@ -3,18 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>攝影地點篩選示範</title>
+  <title>攝影地點資料庫展示</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-</head>
-<body class="bg-gray-50" x-data="photoGallery()">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-  <!-- 🔹 頂部 Carousel -->
+    window.photoApp = function () {
+      return {
+        photos: [],
+        filters: { month: "", sunset: "", difficulty: "", tags: [] },
+        months: ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
+        allTags: ["浪漫","自然","親子","打卡","風景","城市","夜景"],
+        loading: true,
+
+        init() {
+          // ✅ 初始化 Firebase
+          const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+          };
+          const app = initializeApp(firebaseConfig);
+          const db = getDatabase(app);
+
+          // ✅ 從 Realtime Database 讀取資料
+          const dbRef = ref(db, "photo_locations");
+          onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              this.photos = Object.values(data);
+            }
+            this.loading = false;
+          });
+        },
+
+        get filteredPhotos() {
+          return this.photos.filter((p) => {
+            return (
+              (!this.filters.month || (p.months && p.months.includes(this.filters.month))) &&
+              (!this.filters.sunset || p.sunset === this.filters.sunset) &&
+              (!this.filters.difficulty || p.difficulty === this.filters.difficulty) &&
+              (this.filters.tags.length === 0 || (p.tags && this.filters.tags.every((t) => p.tags.includes(t))))
+            );
+          });
+        },
+
+        clearFilters() {
+          this.filters = { month: "", sunset: "", difficulty: "", tags: [] };
+        },
+      };
+    };
+  </script>
+</head>
+
+<body class="bg-gray-50" x-data="photoApp()" x-init="init()">
+
+  <!-- 🔹 Carousel -->
   <div class="w-full overflow-hidden h-64 mb-6">
     <div class="w-full h-full flex animate-[slide_12s_infinite]">
-      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="object-cover w-full h-full" alt="carousel1">
-      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" class="object-cover w-full h-full" alt="carousel2">
-      <img src="https://images.unsplash.com/photo-1503264116251-35a269479413" class="object-cover w-full h-full" alt="carousel3">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="object-cover w-full h-full" alt="">
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" class="object-cover w-full h-full" alt="">
+      <img src="https://images.unsplash.com/photo-1503264116251-35a269479413" class="object-cover w-full h-full" alt="">
     </div>
   </div>
 
@@ -62,83 +117,43 @@
   </div>
 
   <!-- 🔸 圖片清單 -->
-  <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <template x-for="photo in filteredPhotos" :key="photo.id">
-      <div class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
-        <img :src="photo.image" :alt="photo.title" class="h-56 w-full object-cover">
-        <div class="p-4">
-          <h3 class="text-lg font-semibold" x-text="photo.title"></h3>
-          <p class="text-sm text-gray-500 mt-1">
-            <span x-text="photo.month"></span> ｜ 
-            <span x-text="photo.sunset"></span> ｜ 
-            難度：<span x-text="photo.difficulty"></span>
-          </p>
-          <div class="flex flex-wrap gap-2 mt-2">
-            <template x-for="tag in photo.tags" :key="tag">
-              <span class="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">#<span x-text="tag"></span></span>
-            </template>
+  <div class="max-w-6xl mx-auto">
+    <template x-if="loading">
+      <p class="text-center text-gray-500 my-10">載入中...</p>
+    </template>
+
+    <div x-show="!loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <template x-for="photo in filteredPhotos" :key="photo.id">
+        <div class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+          <template x-if="photo.imageUrls && photo.imageUrls.length">
+            <img :src="photo.imageUrls[0]" :alt="photo.name" class="h-56 w-full object-cover">
+          </template>
+          <div class="p-4">
+            <h3 class="text-lg font-semibold" x-text="photo.name"></h3>
+            <p class="text-sm text-gray-500 mt-1">
+              難度：<span x-text="photo.difficulty"></span>
+            </p>
+
+            <div class="mt-2 text-sm text-gray-600 space-y-1">
+              <p><strong>最佳時間：</strong><span x-text="photo.best_time"></span></p>
+              <p><strong>天氣條件：</strong><span x-text="photo.weather_condition"></span></p>
+              <p><strong>攝影提示：</strong><span x-text="photo.tips"></span></p>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mt-2">
+              <template x-for="tag in photo.tags" :key="tag">
+                <span class="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">#<span x-text="tag"></span></span>
+              </template>
+            </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
+    </div>
+
+    <p x-show="!loading && filteredPhotos.length === 0" class="text-center text-gray-500 mt-10">
+      未有符合條件的相片
+    </p>
   </div>
-
-  <!-- 無結果 -->
-  <p x-show="filteredPhotos.length === 0" class="text-center text-gray-500 mt-10">未有符合條件的相片</p>
-
-  <!-- 🔧 Alpine.js 腳本 -->
-  <script>
-    function photoGallery() {
-      return {
-        months: ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
-        allTags: ["浪漫", "自然", "親子", "打卡"],
-        filters: { month: "", sunset: "", difficulty: "", tags: [] },
-        photos: [
-          {
-            id: 1,
-            title: "大帽山日落",
-            image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-            month: "10月",
-            sunset: "山上",
-            difficulty: "中",
-            tags: ["自然", "打卡"],
-          },
-          {
-            id: 2,
-            title: "西貢海邊黃昏",
-            image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-            month: "8月",
-            sunset: "海邊",
-            difficulty: "易",
-            tags: ["浪漫", "自然"],
-          },
-          {
-            id: 3,
-            title: "太平山夜景",
-            image: "https://images.unsplash.com/photo-1503264116251-35a269479413",
-            month: "12月",
-            sunset: "城市",
-            difficulty: "易",
-            tags: ["打卡", "浪漫"],
-          },
-        ],
-
-        get filteredPhotos() {
-          return this.photos.filter((p) => {
-            return (
-              (!this.filters.month || p.month === this.filters.month) &&
-              (!this.filters.sunset || p.sunset === this.filters.sunset) &&
-              (!this.filters.difficulty || p.difficulty === this.filters.difficulty) &&
-              (this.filters.tags.length === 0 || this.filters.tags.every((t) => p.tags.includes(t)))
-            );
-          });
-        },
-        clearFilters() {
-          this.filters = { month: "", sunset: "", difficulty: "", tags: [] };
-        },
-      };
-    }
-  </script>
 
   <!-- 🔹 Carousel 動畫 -->
   <style>
