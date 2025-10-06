@@ -1,77 +1,153 @@
-import { useState } from "react";
-import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>攝影地點篩選示範</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50" x-data="photoGallery()">
 
-export default function FilterBar({ onFilterChange }) {
-  const [filters, setFilters] = useState({
-    month: "",
-    sunset: "",
-    difficulty: "",
-    tags: [],
-  });
-
-  const handleSelect = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    onFilterChange?.({ ...filters, [key]: value });
-  };
-
-  const handleTagToggle = (tag) => {
-    setFilters(prev => {
-      const newTags = prev.tags.includes(tag)
-        ? prev.tags.filter(t => t !== tag)
-        : [...prev.tags, tag];
-      onFilterChange?.({ ...filters, tags: newTags });
-      return { ...prev, tags: newTags };
-    });
-  };
-
-  return (
-    <div className="flex flex-wrap gap-4 bg-white p-4 rounded-2xl shadow-sm mb-6">
-      <Select onValueChange={v => handleSelect("month", v)}>
-        <SelectTrigger className="w-[150px]">月份</SelectTrigger>
-        <SelectContent>
-          <SelectItem value="1月">1月</SelectItem>
-          <SelectItem value="2月">2月</SelectItem>
-          <SelectItem value="3月">3月</SelectItem>
-          <SelectItem value="4月">4月</SelectItem>
-          {/* 可自行加更多月份 */}
-        </SelectContent>
-      </Select>
-
-      <Select onValueChange={v => handleSelect("sunset", v)}>
-        <SelectTrigger className="w-[150px]">日落</SelectTrigger>
-        <SelectContent>
-          <SelectItem value="海邊">海邊</SelectItem>
-          <SelectItem value="山上">山上</SelectItem>
-          <SelectItem value="城市">城市</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <Select onValueChange={v => handleSelect("difficulty", v)}>
-        <SelectTrigger className="w-[150px]">難度</SelectTrigger>
-        <SelectContent>
-          <SelectItem value="易">易</SelectItem>
-          <SelectItem value="中">中</SelectItem>
-          <SelectItem value="難">難</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <div className="flex items-center gap-3">
-        {["浪漫", "自然", "親子", "打卡"].map(tag => (
-          <label key={tag} className="flex items-center gap-1">
-            <Checkbox
-              checked={filters.tags.includes(tag)}
-              onCheckedChange={() => handleTagToggle(tag)}
-            />
-            <span>{tag}</span>
-          </label>
-        ))}
-      </div>
-
-      <Button variant="outline" onClick={() => setFilters({ month: "", sunset: "", difficulty: "", tags: [] })}>
-        清除
-      </Button>
+  <!-- 🔹 頂部 Carousel -->
+  <div class="w-full overflow-hidden h-64 mb-6">
+    <div class="w-full h-full flex animate-[slide_12s_infinite]">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e" class="object-cover w-full h-full" alt="carousel1">
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" class="object-cover w-full h-full" alt="carousel2">
+      <img src="https://images.unsplash.com/photo-1503264116251-35a269479413" class="object-cover w-full h-full" alt="carousel3">
     </div>
-  );
-}
+  </div>
+
+  <!-- 🔸 篩選區 -->
+  <div class="bg-white shadow rounded-2xl p-4 max-w-6xl mx-auto mb-6 flex flex-wrap gap-4 justify-between items-center">
+    <div class="flex flex-wrap gap-4 items-center">
+      <!-- 月份 -->
+      <select x-model="filters.month" class="border rounded-lg p-2">
+        <option value="">月份</option>
+        <template x-for="m in months">
+          <option x-text="m"></option>
+        </template>
+      </select>
+
+      <!-- 日落 -->
+      <select x-model="filters.sunset" class="border rounded-lg p-2">
+        <option value="">日落地點</option>
+        <option>海邊</option>
+        <option>山上</option>
+        <option>城市</option>
+      </select>
+
+      <!-- 難度 -->
+      <select x-model="filters.difficulty" class="border rounded-lg p-2">
+        <option value="">難度</option>
+        <option>易</option>
+        <option>中</option>
+        <option>難</option>
+      </select>
+
+      <!-- 標籤 -->
+      <div class="flex gap-3 flex-wrap items-center">
+        <template x-for="tag in allTags" :key="tag">
+          <label class="flex items-center gap-1 text-sm">
+            <input type="checkbox" :value="tag" x-model="filters.tags" class="accent-pink-500">
+            <span x-text="tag"></span>
+          </label>
+        </template>
+      </div>
+    </div>
+
+    <button @click="clearFilters()" class="border border-gray-300 rounded-lg px-3 py-1 hover:bg-gray-100">
+      清除
+    </button>
+  </div>
+
+  <!-- 🔸 圖片清單 -->
+  <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <template x-for="photo in filteredPhotos" :key="photo.id">
+      <div class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+        <img :src="photo.image" :alt="photo.title" class="h-56 w-full object-cover">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold" x-text="photo.title"></h3>
+          <p class="text-sm text-gray-500 mt-1">
+            <span x-text="photo.month"></span> ｜ 
+            <span x-text="photo.sunset"></span> ｜ 
+            難度：<span x-text="photo.difficulty"></span>
+          </p>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <template x-for="tag in photo.tags" :key="tag">
+              <span class="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">#<span x-text="tag"></span></span>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- 無結果 -->
+  <p x-show="filteredPhotos.length === 0" class="text-center text-gray-500 mt-10">未有符合條件的相片</p>
+
+  <!-- 🔧 Alpine.js 腳本 -->
+  <script>
+    function photoGallery() {
+      return {
+        months: ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
+        allTags: ["浪漫", "自然", "親子", "打卡"],
+        filters: { month: "", sunset: "", difficulty: "", tags: [] },
+        photos: [
+          {
+            id: 1,
+            title: "大帽山日落",
+            image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+            month: "10月",
+            sunset: "山上",
+            difficulty: "中",
+            tags: ["自然", "打卡"],
+          },
+          {
+            id: 2,
+            title: "西貢海邊黃昏",
+            image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+            month: "8月",
+            sunset: "海邊",
+            difficulty: "易",
+            tags: ["浪漫", "自然"],
+          },
+          {
+            id: 3,
+            title: "太平山夜景",
+            image: "https://images.unsplash.com/photo-1503264116251-35a269479413",
+            month: "12月",
+            sunset: "城市",
+            difficulty: "易",
+            tags: ["打卡", "浪漫"],
+          },
+        ],
+
+        get filteredPhotos() {
+          return this.photos.filter((p) => {
+            return (
+              (!this.filters.month || p.month === this.filters.month) &&
+              (!this.filters.sunset || p.sunset === this.filters.sunset) &&
+              (!this.filters.difficulty || p.difficulty === this.filters.difficulty) &&
+              (this.filters.tags.length === 0 || this.filters.tags.every((t) => p.tags.includes(t)))
+            );
+          });
+        },
+        clearFilters() {
+          this.filters = { month: "", sunset: "", difficulty: "", tags: [] };
+        },
+      };
+    }
+  </script>
+
+  <!-- 🔹 Carousel 動畫 -->
+  <style>
+    @keyframes slide {
+      0% {transform: translateX(0);}
+      33% {transform: translateX(-100%);}
+      66% {transform: translateX(-200%);}
+      100% {transform: translateX(0);}
+    }
+  </style>
+</body>
+</html>
