@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase User Filter</title>
+    <title>Photography Locations CMS</title>
     <!-- Firebase JS SDK (v9.6.0 相容模式) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,15 +18,19 @@
             justify-content: center;
         }
         .container {
-            background: white;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            width: 700px;
             max-width: 100%;
         }
+        .form-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
         h1 { text-align: center; color: #333; }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 8px;
             margin: 5px 0 10px;
@@ -40,34 +46,128 @@
             cursor: pointer;
             color: white;
         }
-        #addBtn { background: #4CAF50; }
-        #addBtn:hover { background: #45a049; }
-        #showAllBtn { background: #2196F3; }
-        #showAllBtn:hover { background: #1e88e5; }
-        #showMaleBtn { background: #0288D1; }
-        #showMaleBtn:hover { background: #0277bd; }
-        #showFemaleBtn { background: #F06292; }
-        #showFemaleBtn:hover { background: #ec407a; }
-        #output { margin-top: 20px; }
+        #saveBtn { background: #4CAF50; width: 100%; }
+        #saveBtn:hover { background: #45a049; }
+        #loginBtn { background: #2196F3; width: 100%; }
+        #loginBtn:hover { background: #1e88e5; }
+        #logoutBtn { background: #f44336; width: 100%; }
+        #logoutBtn:hover { background: #d32f2f; }
         #status { color: #888; text-align: center; margin-top: 10px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f2f2f2; }
+        .action-btn {
+            padding: 5px;
+            margin: 2px;
+            cursor: pointer;
+        }
+        .edit-btn { background: #FFA000; color: white; }
+        .delete-btn { background: #f44336; color: white; }
+        #loginContainer { display: block; }
+        #cmsContainer { display: none; }
+        .checkbox-group label { margin-right: 10px; }
+        #photoPreview { max-width: 200px; display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>User Filter App</h1>
-        <input type="text" id="nameInput" placeholder="Enter name...">
-        <select id="genderSelect">
-            <option value="">Select gender</option>
-            <option value="m">Male</option>
-            <option value="f">Female</option>
-        </select>
-        <button id="addBtn" onclick="addUser()">Add User</button>
-        <div>
-            <button id="showAllBtn" onclick="showAll()">Show All</button>
-            <button id="showMaleBtn" onclick="showGender('m')">Show Males</button>
-            <button id="showFemaleBtn" onclick="showGender('f')">Show Females</button>
+    <div class="container" id="loginContainer">
+        <div class="form-container">
+            <h1>CMS Login</h1>
+            <input type="email" id="emailInput" placeholder="Enter email (e.g., admin@yourapp.com)">
+            <input type="password" id="passwordInput" placeholder="Enter password (e.g., cms1984)">
+            <button id="loginBtn" onclick="login()">Login</button>
+            <div id="status"></div>
         </div>
-        <div id="output"></div>
+    </div>
+
+    <div class="container" id="cmsContainer">
+        <h1>Photography Locations CMS</h1>
+        <div class="form-container">
+            <input type="text" id="nameInput" placeholder="Location Name (e.g., Victoria Peak)">
+            <div class="checkbox-group">
+                <label>Months:</label><br>
+                <label><input type="checkbox" name="months" value="January"> January</label>
+                <label><input type="checkbox" name="months" value="February"> February</label>
+                <label><input type="checkbox" name="months" value="March"> March</label>
+                <label><input type="checkbox" name="months" value="April"> April</label>
+                <label><input type="checkbox" name="months" value="May"> May</label>
+                <label><input type="checkbox" name="months" value="June"> June</label>
+                <label><input type="checkbox" name="months" value="July"> July</label>
+                <label><input type="checkbox" name="months" value="August"> August</label>
+                <label><input type="checkbox" name="months" value="September"> September</label>
+                <label><input type="checkbox" name="months" value="October"> October</label>
+                <label><input type="checkbox" name="months" value="November"> November</label>
+                <label><input type="checkbox" name="months" value="December"> December</label>
+            </div>
+            <div class="checkbox-group">
+                <label>Types:</label><br>
+                <label><input type="checkbox" name="types" value="sunset"> Sunset</label>
+                <label><input type="checkbox" name="types" value="sunrise"> Sunrise</label>
+                <label><input type="checkbox" name="types" value="night_view"> Night View</label>
+                <label><input type="checkbox" name="types" value="starry_sky"> Starry Sky</label>
+            </div>
+            <select id="regionSelect">
+                <option value="">Select Region</option>
+                <option value="Hong Kong Island">Hong Kong Island</option>
+                <option value="Kowloon">Kowloon</option>
+                <option value="New Territories">New Territories</option>
+                <option value="Lantau Island">Lantau Island</option>
+                <option value="Tai Mo Shan">Tai Mo Shan</option>
+            </select>
+            <input type="file" id="photoInput" accept="image/*">
+            <img id="photoPreview">
+            <input type="url" id="mapPinInput" placeholder="Google Map Pin URL (e.g., https://maps.google.com/?q=22.3,114.2)">
+            <input type="text" id="dateRangeInput" placeholder="Shooting Date Range (e.g., 2025-01-01 to 2025-02-28)">
+            <input type="text" id="bestTimeInput" placeholder="Best Time (e.g., Sunset: 6:00 PM)">
+            <textarea id="tipsInput" placeholder="Photography Tips (e.g., Use wide-angle lens)" rows="4"></textarea>
+            <textarea id="weatherInput" placeholder="Weather/Conditions Notes (e.g., Clear skies needed)" rows="4"></textarea>
+            <select id="difficultySelect">
+                <option value="">Select Difficulty</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+            <div class="checkbox-group">
+                <label>Tags:</label><br>
+                <label><input type="checkbox" name="tags" value="Urban"> Urban</label>
+                <label><input type="checkbox" name="tags" value="Nature"> Nature</label>
+                <label><input type="checkbox" name="tags" value="Scenic"> Scenic</label>
+                <label><input type="checkbox" name="tags" value="Seasonal"> Seasonal</label>
+            </div>
+            <button id="saveBtn" onclick="saveLocation()">Save Location</button>
+            <button id="logoutBtn" onclick="logout()">Logout</button>
+        </div>
+
+        <h2>Locations Table</h2>
+        <table id="locationsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Months</th>
+                    <th>Types</th>
+                    <th>Region</th>
+                    <th>Photo</th>
+                    <th>Map Pin</th>
+                    <th>Date Range</th>
+                    <th>Best Time</th>
+                    <th>Tips</th>
+                    <th>Weather</th>
+                    <th>Difficulty</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
         <div id="status"></div>
     </div>
 
@@ -78,7 +178,7 @@
             authDomain: "myapp-test37.firebaseapp.com",
             databaseURL: "https://myapp-test37-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "myapp-test37",
-            storageBucket: "myapp-test37.firebasestorage.app",
+            storageBucket: "myapp-test37.appspot.com",
             messagingSenderId: "1012430533501",
             appId: "1:1012430533501:web:4a6be66b2c39b219149214",
             measurementId: "G-GJVS2NNGF2"
@@ -86,73 +186,263 @@
 
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
-        const usersRef = database.ref('users');
+        const storage = firebase.storage();
+        const locationsRef = database.ref('locations');
 
-        // 添加用戶
-        function addUser() {
-            const nameInput = document.getElementById('nameInput').value.trim();
-            const genderSelect = document.getElementById('genderSelect').value;
-            if (!nameInput || !genderSelect) {
-                showStatus('Please enter name and select gender!', true);
+        let editingId = null;
+
+        // 監聽認証狀態
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('cmsContainer').style.display = 'block';
+                loadTable();
+            } else {
+                document.getElementById('loginContainer').style.display = 'block';
+                document.getElementById('cmsContainer').style.display = 'none';
+            }
+        });
+
+        // 登入
+        function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            if (!email || !password) {
+                showStatus('Please enter email and password!', true);
                 return;
             }
-            const newUser = {
-                name: nameInput,
-                gender: genderSelect,
-                id: '' // 稍後設置
-            };
-            const newRef = usersRef.push(); // 自動生成唯一 ID
-            newUser.id = newRef.key; // 將生成的 ID 存入資料
-            newRef.set(newUser)
+            auth.signInWithEmailAndPassword(email, password)
                 .then(() => {
-                    document.getElementById('nameInput').value = '';
-                    document.getElementById('genderSelect').value = '';
-                    showStatus('User added successfully!');
-                    showAll(); // 添加後顯示所有資料
+                    showStatus('Login successful!');
                 })
                 .catch((error) => {
-                    console.error('Add user failed:', error);
-                    showStatus('Error adding user: ' + error.message, true);
+                    console.error('Login failed:', error);
+                    showStatus('Error: ' + error.message, true);
                 });
         }
 
-        // 顯示所有用戶
-        function showAll() {
-            usersRef.once('value')
-                .then((snapshot) => {
-                    displayUsers(snapshot.val(), 'All Users');
+        // 登出
+        function logout() {
+            auth.signOut()
+                .then(() => {
+                    showStatus('Logged out successfully!');
+                    resetForm();
                 })
                 .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error fetching users: ' + error.message, true);
+                    console.error('Logout failed:', error);
+                    showStatus('Error: ' + error.message, true);
                 });
         }
 
-        // 按性別過濾用戶
-        function showGender(gender) {
-            usersRef.orderByChild('gender').equalTo(gender).once('value')
-                .then((snapshot) => {
-                    displayUsers(snapshot.val(), gender === 'm' ? 'Male Users' : 'Female Users');
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showStatus('Error filtering users: ' + error.message, true);
-                });
-        }
+        // 保存位置
+        function saveLocation() {
+            const name = document.getElementById('nameInput').value.trim();
+            const months = Array.from(document.querySelectorAll('input[name="months"]:checked')).map(el => el.value);
+            const types = Array.from(document.querySelectorAll('input[name="types"]:checked')).map(el => el.value);
+            const region = document.getElementById('regionSelect').value;
+            const photoFile = document.getElementById('photoInput').files[0];
+            const mapPin = document.getElementById('mapPinInput').value.trim();
+            const dateRange = document.getElementById('dateRangeInput').value.trim();
+            const bestTime = document.getElementById('bestTimeInput').value.trim();
+            const tips = document.getElementById('tipsInput').value.trim();
+            const weather = document.getElementById('weatherInput').value.trim();
+            const difficulty = document.getElementById('difficultySelect').value;
+            const tags = Array.from(document.querySelectorAll('input[name="tags"]:checked')).map(el => el.value);
 
-        // 顯示用戶資料
-        function displayUsers(data, title) {
-            const output = document.getElementById('output');
-            output.innerHTML = `<h3>${title}</h3>`;
-            if (data) {
-                for (let key in data) {
-                    const user = data[key];
-                    output.innerHTML += `<p>ID: ${user.id}, Name: ${user.name}, Gender: ${user.gender}</p>`;
-                }
-            } else {
-                output.innerHTML += '<p>No users found.</p>';
+            if (!name || months.length === 0 || types.length === 0 || !region || !mapPin) {
+                showStatus('Please fill all required fields (Name, Months, Types, Region, Map Pin)!', true);
+                return;
             }
+
+            const locationData = {
+                name,
+                months,
+                types,
+                region,
+                map_pin: mapPin,
+                date_range: dateRange || null,
+                best_time: bestTime || null,
+                tips: tips || null,
+                weather: weather || null,
+                difficulty: difficulty || null,
+                tags: tags.length ? tags : null
+            };
+
+            // 處理圖像上傳
+            if (photoFile) {
+                const storageRef = storage.ref('images/' + Date.now() + '_' + photoFile.name);
+                const uploadTask = storageRef.put(photoFile);
+                uploadTask.on('state_changed',
+                    null,
+                    (error) => {
+                        console.error('Upload failed:', error);
+                        showStatus('Error uploading photo: ' + error.message, true);
+                    },
+                    () => {
+                        storageRef.getDownloadURL().then((url) => {
+                            locationData.photo_url = url;
+                            saveToDatabase(locationData);
+                        });
+                    }
+                );
+            } else if (editingId) {
+                // 編輯時若無新圖像，保留原有 photo_url
+                locationsRef.child(editingId).once('value').then((snapshot) => {
+                    const existing = snapshot.val();
+                    locationData.photo_url = existing.photo_url || null;
+                    saveToDatabase(locationData);
+                });
+            } else {
+                locationData.photo_url = null;
+                saveToDatabase(locationData);
+            }
+        }
+
+        // 保存到資料庫
+        function saveToDatabase(locationData) {
+            let ref;
+            if (editingId) {
+                ref = locationsRef.child(editingId);
+                ref.update(locationData)
+                    .then(() => {
+                        showStatus('Location updated successfully!');
+                        resetForm();
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Update failed:', error);
+                        showStatus('Error updating location: ' + error.message, true);
+                    });
+            } else {
+                ref = locationsRef.push();
+                locationData.id = ref.key;
+                ref.set(locationData)
+                    .then(() => {
+                        showStatus('Location added successfully!');
+                        resetForm();
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Add failed:', error);
+                        showStatus('Error adding location: ' + error.message, true);
+                    });
+            }
+        }
+
+        // 載入表格
+        function loadTable() {
+            locationsRef.once('value')
+                .then((snapshot) => {
+                    const tbody = document.querySelector('#locationsTable tbody');
+                    tbody.innerHTML = '';
+                    const data = snapshot.val();
+                    if (data) {
+                        for (let key in data) {
+                            const loc = data[key];
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${key}</td>
+                                <td>${loc.name}</td>
+                                <td>${loc.months.join(', ')}</td>
+                                <td>${loc.types.join(', ')}</td>
+                                <td>${loc.region}</td>
+                                <td>${loc.photo_url ? `<a href="${loc.photo_url}" target="_blank">View</a>` : 'N/A'}</td>
+                                <td><a href="${loc.map_pin}" target="_blank">Link</a></td>
+                                <td>${loc.date_range || 'N/A'}</td>
+                                <td>${loc.best_time || 'N/A'}</td>
+                                <td>${loc.tips || 'N/A'}</td>
+                                <td>${loc.weather || 'N/A'}</td>
+                                <td>${loc.difficulty || 'N/A'}</td>
+                                <td>${loc.tags ? loc.tags.join(', ') : 'N/A'}</td>
+                                <td>
+                                    <button class="action-btn edit-btn" onclick="editLocation('${key}')">Edit</button>
+                                    <button class="action-btn delete-btn" onclick="deleteLocation('${key}')">Delete</button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        }
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="14">No locations found.</td></tr>';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading table:', error);
+                    showStatus('Error loading locations: ' + error.message, true);
+                });
+        }
+
+        // 編輯位置
+        function editLocation(id) {
+            locationsRef.child(id).once('value')
+                .then((snapshot) => {
+                    const loc = snapshot.val();
+                    if (loc) {
+                        document.getElementById('nameInput').value = loc.name;
+                        document.querySelectorAll('input[name="months"]').forEach(el => {
+                            el.checked = loc.months.includes(el.value);
+                        });
+                        document.querySelectorAll('input[name="types"]').forEach(el => {
+                            el.checked = loc.types.includes(el.value);
+                        });
+                        document.getElementById('regionSelect').value = loc.region;
+                        document.getElementById('mapPinInput').value = loc.map_pin;
+                        document.getElementById('dateRangeInput').value = loc.date_range || '';
+                        document.getElementById('bestTimeInput').value = loc.best_time || '';
+                        document.getElementById('tipsInput').value = loc.tips || '';
+                        document.getElementById('weatherInput').value = loc.weather || '';
+                        document.getElementById('difficultySelect').value = loc.difficulty || '';
+                        document.querySelectorAll('input[name="tags"]').forEach(el => {
+                            el.checked = loc.tags && loc.tags.includes(el.value);
+                        });
+                        if (loc.photo_url) {
+                            document.getElementById('photoPreview').src = loc.photo_url;
+                            document.getElementById('photoPreview').style.display = 'block';
+                        } else {
+                            document.getElementById('photoPreview').style.display = 'none';
+                        }
+                        editingId = id;
+                        showStatus('Editing location: ' + id);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error fetching for edit:', error);
+                    showStatus('Error: ' + error.message, true);
+                });
+        }
+
+        // 刪除位置
+        function deleteLocation(id) {
+            if (confirm('Are you sure you want to delete this location?')) {
+                locationsRef.child(id).remove()
+                    .then(() => {
+                        showStatus('Location deleted successfully!');
+                        loadTable();
+                    })
+                    .catch((error) => {
+                        console.error('Delete failed:', error);
+                        showStatus('Error deleting location: ' + error.message, true);
+                    });
+            }
+        }
+
+        // 重置表單
+        function resetForm() {
+            document.getElementById('nameInput').value = '';
+            document.querySelectorAll('input[name="months"]').forEach(el => el.checked = false);
+            document.querySelectorAll('input[name="types"]').forEach(el => el.checked = false);
+            document.getElementById('regionSelect').value = '';
+            document.getElementById('photoInput').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('mapPinInput').value = '';
+            document.getElementById('dateRangeInput').value = '';
+            document.getElementById('bestTimeInput').value = '';
+            document.getElementById('tipsInput').value = '';
+            document.getElementById('weatherInput').value = '';
+            document.getElementById('difficultySelect').value = '';
+            document.querySelectorAll('input[name="tags"]').forEach(el => el.checked = false);
+            editingId = null;
         }
 
         // 顯示狀態訊息
