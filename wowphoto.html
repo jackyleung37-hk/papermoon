@@ -3,222 +3,260 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>攝影景點管理系統</title>
-  <!-- Firebase JS SDK -->
+  <title>攝影景點搜尋</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
   <style>
     body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background-color: #f7f8fa;
+      font-family: "Noto Sans TC", "Segoe UI", Arial, sans-serif;
+      background-color: #f5f7fa;
       margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f2d3d;
+      margin-bottom: 30px;
+      font-size: 2.4em;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* ===== Carousel ===== */
+    .carousel {
+      position: relative;
+      height: 450px;
+      overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      margin-bottom: 50px;
+    }
+
+    .carousel-inner {
       display: flex;
-      justify-content: center;
-      padding: 20px;
+      transition: transform 0.6s ease;
+      height: 100%;
     }
-    .container { width: 100%; max-width: 900px; }
-    h1, h2, h3 { text-align: center; color: #333; margin-bottom: 8px; }
-    .form-container {
-      background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-      padding: 16px; margin-bottom: 16px;
+
+    .carousel-item {
+      flex: 0 0 100%;
+      position: relative;
     }
-    label { font-weight: 600; display: block; margin: 8px 0 4px; }
-    input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    select[multiple] { min-height: 90px; }
-    .row { display: flex; gap: 10px; }
-    .col { flex: 1; }
-    .button-row { display: flex; gap: 10px; margin-top: 10px; }
-    button { flex: 1; padding: 10px; border: none; border-radius: 6px; color: #fff; cursor: pointer; }
-    #saveBtn { background: #4CAF50; }
-    #saveBtn:hover { background: #45a049; }
-    #logoutBtn { background: #f44336; }
-    #logoutBtn:hover { background: #d32f2f; }
-    #loginBtn { background: #2196F3; }
-    #loginBtn:hover { background: #1e88e5; }
-    #filterBtn { background: #2196F3; }
-    #filterBtn:hover { background: #1e88e5; }
-    #resetFilterBtn { background: #607D8B; }
-    #resetFilterBtn:hover { background: #546E7A; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; }
-    th, td { border: 1px solid #eee; padding: 8px; font-size: 14px; vertical-align: middle; }
-    th { background: #fafafa; }
-    .thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; display: block; }
-    .action-btn { padding: 6px 8px; border-radius: 4px; color: #fff; border: none; cursor: pointer; margin-right: 6px; }
-    .edit-btn { background: #FFA000; }
-    .delete-btn { background: #f44336; }
-    #status { text-align: center; margin-top: 8px; font-weight: 600; color: #666; min-height: 20px; }
+
+    .carousel-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(65%);
+    }
+
+    .carousel-caption {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 3px 8px rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 10px 20px;
+      max-width: 90%;
+    }
+
+    .carousel-caption h2 {
+      font-size: 1.8em;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .carousel-caption p {
+      font-size: 1.1em;
+      margin: 8px 0 0;
+    }
+
+    .carousel-prev, .carousel-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.4);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 1.6em;
+      border-radius: 50%;
+      transition: background 0.3s;
+      z-index: 10;
+    }
+
+    .carousel-prev:hover, .carousel-next:hover {
+      background: rgba(0,0,0,0.7);
+    }
+
+    .carousel-prev { left: 15px; }
+    .carousel-next { right: 15px; }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .dot.active { background: #fff; }
+
+    /* ===== Grid ===== */
+    .locations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .location-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .location-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .location-card img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+    }
+
+    .location-info {
+      padding: 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .location-info h3 {
+      font-size: 1.3em;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .location-info p {
+      font-size: 0.95em;
+      margin: 4px 0;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .location-info strong {
+      color: #1e88e5;
+    }
+
+    .location-info a {
+      margin-top: 12px;
+      align-self: flex-start;
+      background: #2196F3;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: background 0.3s;
+    }
+
+    .location-info a:hover {
+      background: #1976d2;
+    }
+
+    /* ===== Pagination ===== */
+    .pagination {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .pagination button {
+      padding: 8px 14px;
+      margin: 0 4px;
+      border: none;
+      background: #e3e8ee;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1em;
+    }
+
+    .pagination button.active {
+      background: #2196F3;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .pagination button:hover {
+      background: #cfd8dc;
+    }
+
+    /* ===== Status ===== */
+    #status {
+      text-align: center;
+      margin-top: 25px;
+      color: #666;
+      font-size: 0.95em;
+    }
   </style>
 </head>
+
 <body>
-  <!-- Login -->
-  <div class="container" id="loginContainer">
-    <div class="form-container">
-      <h1>管理系統登入</h1>
-      <input type="email" id="emailInput" placeholder="電郵">
-      <input type="password" id="passwordInput" placeholder="密碼">
-      <div class="button-row">
-        <button id="loginBtn" onclick="login()">登入</button>
-      </div>
-      <div id="status"></div>
-    </div>
-  </div>
+  <div class="container">
+    <h1>📸 攝影景點搜尋</h1>
 
-  <!-- CMS -->
-  <div class="container" id="cmsContainer" style="display:none;">
-    <h1>拍攝地點管理</h1>
-    <div class="form-container">
-      <label>地點名稱</label>
-      <input type="text" id="locationNameInput" placeholder="輸入地點名稱">
-
-      <div class="row">
-        <div class="col">
-          <label>月份 (可多選)</label>
-          <select id="monthSelect" multiple>
-            <option value="January">一月</option><option value="February">二月</option>
-            <option value="March">三月</option><option value="April">四月</option>
-            <option value="May">五月</option><option value="June">六月</option>
-            <option value="July">七月</option><option value="August">八月</option>
-            <option value="September">九月</option><option value="October">十月</option>
-            <option value="November">十一月</option><option value="December">十二月</option>
-          </select>
-        </div>
-
-        <div class="col">
-          <label>拍攝類型 (可多選)</label>
-          <select id="typeSelect" multiple>
-            <option value="sunset">日落</option><option value="sunrise">日出</option>
-            <option value="night_view">夜景</option><option value="starry_sky">星空</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>最佳時間</label>
-          <input type="text" id="bestTimeInput" placeholder="例：黃昏 6:30pm 前後">
-        </div>
-        <div class="col">
-          <label>難度</label>
-          <select id="difficultySelect">
-            <option value="">選擇難度</option>
-            <option value="Easy">簡單</option><option value="Medium">中等</option><option value="Hard">困難</option>
-          </select>
-        </div>
-      </div>
-
-      <label>攝影提示</label>
-      <textarea id="tipsInput" placeholder="例：建議帶腳架、ND 濾鏡..." rows="3"></textarea>
-
-      <div class="row">
-        <div class="col">
-          <label>天氣條件</label>
-          <input type="text" id="weatherInput" placeholder="例：晴天／微雲最理想">
-        </div>
-        <div class="col">
-          <label>標籤 (可多選)</label>
-          <select id="tagSelect" multiple>
-            <option value="mountain">山景</option><option value="sea">海景</option>
-            <option value="city">城市</option><option value="hidden_spot">隱秘地點</option>
-            <option value="popular">熱門</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col">
-          <label>地圖連結</label>
-          <input type="url" id="mapPinInput" placeholder="輸入 Google Map URL">
-        </div>
-        <div class="col">
-          <label>圖片連結</label>
-          <input type="url" id="imageUrlInput" placeholder="輸入圖片外部連結 (jpg/png)">
-        </div>
-      </div>
-
-      <div class="button-row">
-        <button id="saveBtn" onclick="saveLocation()">儲存</button>
-        <button id="logoutBtn" onclick="logout()">登出</button>
-      </div>
-      <div id="status"></div>
+    <!-- Carousel -->
+    <div class="carousel">
+      <div class="carousel-inner" id="carouselInner"></div>
+      <button class="carousel-prev" onclick="prevSlide()">&#10094;</button>
+      <button class="carousel-next" onclick="nextSlide()">&#10095;</button>
+      <div class="carousel-dots" id="carouselDots"></div>
     </div>
 
-    <h2>地點列表</h2>
-    <div class="form-container">
-      <h3>篩選條件</h3>
-      <div class="row">
-        <div class="col">
-          <label>地點名稱</label>
-          <input type="text" id="filterNameInput" placeholder="輸入地點名稱（模糊搜尋）">
-        </div>
-        <div class="col">
-          <label>月份</label>
-          <select id="filterMonthSelect">
-            <option value="">全部</option>
-            <option value="January">一月</option><option value="February">二月</option>
-            <option value="March">三月</option><option value="April">四月</option>
-            <option value="May">五月</option><option value="June">六月</option>
-            <option value="July">七月</option><option value="August">八月</option>
-            <option value="September">九月</option><option value="October">十月</option>
-            <option value="November">十一月</option><option value="December">十二月</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label>拍攝類型</label>
-          <select id="filterTypeSelect">
-            <option value="">全部</option>
-            <option value="sunset">日落</option><option value="sunrise">日出</option>
-            <option value="night_view">夜景</option><option value="starry_sky">星空</option>
-          </select>
-        </div>
-        <div class="col">
-          <label>難度</label>
-          <select id="filterDifficultySelect">
-            <option value="">全部</option>
-            <option value="Easy">簡單</option><option value="Medium">中等</option><option value="Hard">困難</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label>標籤</label>
-          <select id="filterTagSelect">
-            <option value="">全部</option>
-            <option value="mountain">山景</option><option value="sea">海景</option>
-            <option value="city">城市</option><option value="hidden_spot">隱秘地點</option>
-            <option value="popular">熱門</option>
-          </select>
-        </div>
-        <div class="col"></div>
-      </div>
-      <div class="button-row">
-        <button id="filterBtn" onclick="applyFilter()">應用過濾</button>
-        <button id="resetFilterBtn" onclick="resetFilter()">重置過濾</button>
-      </div>
-    </div>
+    <!-- Locations Grid -->
+    <div class="locations-grid" id="locationsGrid"></div>
 
-    <table id="locationsTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>縮圖</th>
-          <th>地點名稱</th>
-          <th>月份</th>
-          <th>類型</th>
-          <th>最佳時間</th>
-          <th>難度</th>
-          <th>動作</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Pagination -->
+    <div class="pagination" id="pagination"></div>
+
     <div id="status"></div>
   </div>
 
+  <!-- 原 JS 保留 -->
   <script>
-    // Firebase 設定
     const firebaseConfig = {
       apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
       authDomain: "myapp-test37.firebaseapp.com",
@@ -229,194 +267,119 @@
       appId: "1:1012430533501:web:4a6be66b2c39b219149214"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const database = firebase.database();
     const locationsRef = database.ref('locations');
-    let editingId = null;
-    let allLocations = []; // 儲存所有資料用於過濾
 
-    // Auth state
-    auth.onAuthStateChanged(user => {
-      document.getElementById('loginContainer').style.display = user ? 'none' : 'block';
-      document.getElementById('cmsContainer').style.display = user ? 'block' : 'none';
-      if (user) loadTable();
-    });
+    let allLocations = [];
+    let popularLocations = [];
+    let currentPage = 2;
+    const itemsPerPage = 10;
+    let currentSlide = 0;
 
-    function login() {
-      const email = emailInput.value.trim();
-      const pw = passwordInput.value.trim();
-      if (!email || !pw) return showStatus("請輸入電郵和密碼", true);
-      auth.signInWithEmailAndPassword(email, pw)
-        .then(() => showStatus("登入成功"))
-        .catch(err => showStatus("登入錯誤：" + err.message, true));
-    }
-
-    function logout() {
-      auth.signOut().then(() => {
-        resetForm();
-        showStatus("已登出");
-      }).catch(err => showStatus("登出失敗：" + err.message, true));
-    }
-
-    function saveLocation() {
-      const name = locationNameInput.value.trim();
-      const months = Array.from(monthSelect.selectedOptions).map(o => o.value);
-      const types = Array.from(typeSelect.selectedOptions).map(o => o.value);
-      const bestTime = bestTimeInput.value.trim();
-      const tips = tipsInput.value.trim();
-      const weather = weatherInput.value.trim();
-      const difficulty = difficultySelect.value;
-      const tags = Array.from(tagSelect.selectedOptions).map(o => o.value);
-      const mapPin = mapPinInput.value.trim();
-      const imageUrl = imageUrlInput.value.trim();
-
-      if (!name || months.length === 0 || types.length === 0) {
-        return showStatus("請完整填寫：地點名稱、月份、拍攝類型", true);
+    locationsRef.once('value').then(snap => {
+      const data = snap.val();
+      if (!data) {
+        document.getElementById('locationsGrid').innerHTML = '<p>無景點資料</p>';
+        document.getElementById('status').textContent = '無景點資料';
+        return;
       }
 
-      const data = { name, months, types, bestTime, tips, weather, difficulty, tags, mapPin, imageUrl };
-      const ref = editingId ? locationsRef.child(editingId) : locationsRef.push();
-      if (!editingId) data.id = ref.key;
+      allLocations = Object.entries(data).map(([id, loc]) => ({ id, ...loc }));
+      popularLocations = allLocations.filter(loc => loc.tags && loc.tags.includes('popular'));
+      if (popularLocations.length === 0) {
+        document.getElementById('carouselInner').innerHTML =
+          '<div class="carousel-item"><div class="carousel-caption"><h2>暫無熱門景點</h2></div></div>';
+      } else {
+        renderCarousel();
+        autoSlide();
+      }
 
-      ref.set(data)
-        .then(() => {
-          showStatus(editingId ? "更新成功" : "新增成功");
-          editingId = null;
-          resetForm();
-          loadTable();
-        })
-        .catch(e => showStatus("儲存錯誤：" + e.message, true));
+      const totalPages = Math.ceil(allLocations.length / itemsPerPage);
+      if (totalPages < 2) currentPage = 1;
+      renderGrid(currentPage);
+      renderPagination();
+    }).catch(e => document.getElementById('status').textContent = '載入錯誤：' + e.message);
+
+    function renderCarousel() {
+      const inner = document.getElementById('carouselInner');
+      const dots = document.getElementById('carouselDots');
+      inner.innerHTML = '';
+      dots.innerHTML = '';
+      popularLocations.forEach((loc, index) => {
+        inner.innerHTML += `
+          <div class="carousel-item">
+            <img src="${loc.imageUrl || 'https://via.placeholder.com/1200x400?text=無圖片'}" alt="${loc.name}">
+            <div class="carousel-caption">
+              <h2>${loc.name}</h2>
+              <p>${loc.types.map(t => ({sunset:'日落',sunrise:'日出',night_view:'夜景',starry_sky:'星空'}[t]||t)).join(', ')}</p>
+            </div>
+          </div>`;
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.onclick = () => showSlide(index);
+        dots.appendChild(dot);
+      });
+      showSlide(currentSlide);
     }
 
-    function loadTable(filter = null) {
-      locationsRef.once('value').then(snap => {
-        const tbody = document.querySelector('#locationsTable tbody');
-        tbody.innerHTML = '';
-        const data = snap.val();
-        allLocations = []; // 重置全域資料
-        if (!data) {
-          tbody.innerHTML = '<tr><td colspan="8">無資料</td></tr>';
-          return;
-        }
-
-        allLocations = Object.entries(data).map(([id, loc]) => ({ id, ...loc }));
-
-        let filteredLocations = allLocations;
-        if (filter) {
-          const { name, month, type, difficulty, tag } = filter;
-          filteredLocations = allLocations.filter(loc => {
-            const matchName = !name || loc.name.toLowerCase().includes(name.toLowerCase());
-            const matchMonth = !month || loc.months.includes(month);
-            const matchType = !type || loc.types.includes(type);
-            const matchDifficulty = !difficulty || loc.difficulty === difficulty;
-            const matchTag = !tag || loc.tags.includes(tag);
-            return matchName && matchMonth && matchType && matchDifficulty && matchTag;
-          });
-        }
-
-        if (filteredLocations.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8">無符合條件的資料</td></tr>';
-          return;
-        }
-
-        filteredLocations.forEach(loc => {
-          const thumbHtml = loc.imageUrl ? `<a href="${loc.imageUrl}" target="_blank"><img src="${loc.imageUrl}" class="thumb" alt="thumb" onerror="this.style.display='none'"></a>` : '';
-          const months = (loc.months || []).map(m => {
-            const monthMap = {
-              January: '一月', February: '二月', March: '三月', April: '四月',
-              May: '五月', June: '六月', July: '七月', August: '八月',
-              September: '九月', October: '十月', November: '十一月', December: '十二月'
-            };
-            return monthMap[m] || m;
-          }).join(', ');
-          const types = (loc.types || []).map(t => {
-            const typeMap = {
-              sunset: '日落', sunrise: '日出', night_view: '夜景', starry_sky: '星空'
-            };
-            return typeMap[t] || t;
-          }).join(', ');
-          tbody.innerHTML += `
-            <tr>
-              <td>${loc.id}</td>
-              <td>${thumbHtml}</td>
-              <td>${loc.name || ''}</td>
-              <td>${months}</td>
-              <td>${types}</td>
-              <td>${loc.bestTime || ''}</td>
-              <td>${loc.difficulty ? {Easy: '簡單', Medium: '中等', Hard: '困難'}[loc.difficulty] || loc.difficulty : ''}</td>
-              <td>
-                <button class="action-btn edit-btn" onclick="editLocation('${loc.id}')">編輯</button>
-                <button class="action-btn delete-btn" onclick="deleteLocation('${loc.id}')">刪除</button>
-              </td>
-            </tr>`;
-        });
-      }).catch(e => showStatus('載入錯誤：' + e.message, true));
+    function showSlide(index) {
+      const items = document.querySelectorAll('.carousel-item');
+      const dots = document.querySelectorAll('.dot');
+      if (index >= items.length) index = 0;
+      if (index < 0) index = items.length - 1;
+      currentSlide = index;
+      document.getElementById('carouselInner').style.transform = `translateX(-${index * 100}%)`;
+      dots.forEach(d => d.classList.remove('active'));
+      dots[index].classList.add('active');
     }
 
-    function applyFilter() {
-      const name = document.getElementById('filterNameInput').value.trim();
-      const month = document.getElementById('filterMonthSelect').value;
-      const type = document.getElementById('filterTypeSelect').value;
-      const difficulty = document.getElementById('filterDifficultySelect').value;
-      const tag = document.getElementById('filterTagSelect').value;
+    function nextSlide() { showSlide(currentSlide + 1); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+    function autoSlide() { setInterval(nextSlide, 5000); }
 
-      const filter = { name, month, type, difficulty, tag };
-      loadTable(filter);
-      showStatus('已應用過濾');
+    function renderGrid(page) {
+      const grid = document.getElementById('locationsGrid');
+      grid.innerHTML = '';
+      const start = (page - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginated = allLocations.slice(start, end);
+      paginated.forEach(loc => {
+        const card = document.createElement('div');
+        card.className = 'location-card';
+        card.innerHTML = `
+          <img src="${loc.imageUrl || 'https://via.placeholder.com/280x180?text=無圖片'}" alt="${loc.name}">
+          <div class="location-info">
+            <h3>${loc.name || '無名稱'}</h3>
+            <p><strong>月份：</strong>${loc.months?.map(m => ({January:'一月',February:'二月',March:'三月',April:'四月',May:'五月',June:'六月',July:'七月',August:'八月',September:'九月',October:'十月',November:'十一月',December:'十二月'}[m]||m)).join(', ')}</p>
+            <p><strong>類型：</strong>${loc.types?.map(t => ({sunset:'日落',sunrise:'日出',night_view:'夜景',starry_sky:'星空'}[t]||t)).join(', ')}</p>
+            <p><strong>最佳時間：</strong>${loc.bestTime || '無'}</p>
+            <p><strong>難度：</strong>${loc.difficulty ? {Easy:'簡單',Medium:'中等',Hard:'困難'}[loc.difficulty]||loc.difficulty : '無'}</p>
+            <p><strong>攝影提示：</strong>${loc.tips || '無'}</p>
+            <p><strong>天氣條件：</strong>${loc.weather || '無'}</p>
+            <p><strong>標籤：</strong>${loc.tags?.map(tag => ({mountain:'山景',sea:'海景',city:'城市',hidden_spot:'隱秘地點',popular:'熱門'}[tag]||tag)).join(', ')}</p>
+            <a href="${loc.mapPin}" target="_blank">查看地圖</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    function resetFilter() {
-      document.getElementById('filterNameInput').value = '';
-      document.getElementById('filterMonthSelect').value = '';
-      document.getElementById('filterTypeSelect').value = '';
-      document.getElementById('filterDifficultySelect').value = '';
-      document.getElementById('filterTagSelect').value = '';
-      loadTable();
-      showStatus('已重置過濾');
-    }
-
-    function editLocation(id) {
-      locationsRef.child(id).once('value').then(snap => {
-        const loc = snap.val();
-        if (!loc) return;
-        locationNameInput.value = loc.name || '';
-        selectMulti(monthSelect, loc.months || []);
-        selectMulti(typeSelect, loc.types || []);
-        bestTimeInput.value = loc.bestTime || '';
-        tipsInput.value = loc.tips || '';
-        weatherInput.value = loc.weather || '';
-        difficultySelect.value = loc.difficulty || '';
-        selectMulti(tagSelect, loc.tags || []);
-        mapPinInput.value = loc.mapPin || '';
-        imageUrlInput.value = loc.imageUrl || '';
-        editingId = id;
-        showStatus("編輯模式中");
-      }).catch(e => showStatus('讀取錯誤：' + e.message, true));
-    }
-
-    function deleteLocation(id) {
-      if (!confirm("確定刪除此項？")) return;
-      locationsRef.child(id).remove().then(() => {
-        showStatus("刪除成功");
-        loadTable();
-      }).catch(e => showStatus("刪除失敗：" + e.message, true));
-    }
-
-    function selectMulti(selectElem, values = []) {
-      Array.from(selectElem.options).forEach(opt => opt.selected = values.includes(opt.value));
-    }
-
-    function resetForm() {
-      document.querySelectorAll('input, textarea').forEach(i => i.value = '');
-      document.querySelectorAll('select').forEach(s => Array.from(s.options).forEach(o => o.selected = false));
-      editingId = null;
-    }
-
-    function showStatus(msg, isErr = false) {
-      const s = document.getElementById('status');
-      s.style.color = isErr ? 'red' : 'green';
-      s.textContent = msg;
-      setTimeout(() => { if (s.textContent === msg) s.textContent = ''; }, 3000);
+    function renderPagination() {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      const totalPages = Math.ceil(allLocations.length / itemsPerPage);
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.onclick = () => {
+          currentPage = i;
+          renderGrid(currentPage);
+          document.querySelectorAll('.pagination button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        };
+        if (i === currentPage) btn.classList.add('active');
+        pagination.appendChild(btn);
+      }
     }
   </script>
 </body>
