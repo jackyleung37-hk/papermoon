@@ -260,6 +260,23 @@
       transition: background 0.3s;
     }
     .details-content a:hover { background: #1976d2; }
+    .close-details {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2em;
+      line-height: 30px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+    .close-details:hover { background: #d32f2f; }
 
     /* Pagination */
     .pagination {
@@ -458,8 +475,9 @@
           <div class="location-title">
             <h3>${loc.name || '無名稱'}</h3>
           </div>
-          <button class="details-toggle" onclick="this.nextElementSibling.classList.toggle('show');this.textContent=this.nextElementSibling.classList.contains('show')?'隱藏詳情':'查看詳情'">查看詳情</button>
+          <button class="details-toggle" onclick="toggleDetails(this)">查看詳情</button>
           <div class="details-content">
+            <button class="close-details" onclick="toggleDetails(this.parentElement.previousElementSibling)">×</button>
             <p><strong>類型：</strong>${loc.types?.map(t => ({sunset:'日落',sunrise:'日出',night_view:'夜景',starry_sky:'星空'}[t]||t)).join(', ')}</p>
             <p><strong>最佳時間：</strong>${loc.bestTime || '無'}</p>
             <p><strong>月份：</strong>${loc.months?.map(m => ({January:'一月',February:'二月',March:'三月',April:'四月',May:'五月',June:'六月',July:'七月',August:'八月',September:'九月',October:'十月',November:'十一月',December:'十二月'}[m]||m)).join(', ')}</p>
@@ -522,6 +540,14 @@
       renderGrid(currentPage);
       renderPagination();
       document.getElementById('status').textContent = '已重置篩選';
+    }
+
+    // 展開/收起詳情
+    function toggleDetails(button) {
+      const details = button.nextElementSibling;
+      const isShowing = details.classList.contains('show');
+      details.classList.toggle('show');
+      button.textContent = isShowing ? '查看詳情' : '隱藏詳情';
     }
   </script>
 </body>
