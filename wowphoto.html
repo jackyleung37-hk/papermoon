@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Firebase CMS UI</title>
-
-  <!-- Firebase JS SDK  -->
+  <title>攝影景點管理系統</title>
+  <!-- Firebase JS SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-
   <style>
     body {
       font-family: "Segoe UI", Arial, sans-serif;
@@ -20,7 +18,7 @@
       padding: 20px;
     }
     .container { width: 100%; max-width: 900px; }
-    h1, h2 { text-align: center; color: #333; margin-bottom: 8px; }
+    h1, h2, h3 { text-align: center; color: #333; margin-bottom: 8px; }
     .form-container {
       background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);
       padding: 16px; margin-bottom: 16px;
@@ -28,30 +26,39 @@
     label { font-weight: 600; display: block; margin: 8px 0 4px; }
     input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
     select[multiple] { min-height: 90px; }
-    .row { display:flex; gap:10px; }
-    .col { flex:1; }
-    .button-row { display:flex; gap:10px; margin-top:10px; }
-    button { flex:1; padding:10px; border:none; border-radius:6px; color:#fff; cursor:pointer; }
-    #saveBtn { background:#4CAF50; } #logoutBtn { background:#f44336; }
-    table { width:100%; border-collapse: collapse; margin-top:12px; background:#fff; }
-    th, td { border:1px solid #eee; padding:8px; font-size:14px; vertical-align:middle; }
-    th { background:#fafafa; }
-    .thumb { width:80px; height:60px; object-fit:cover; border-radius:4px; display:block; }
-    .action-btn { padding:6px 8px; border-radius:4px; color:#fff; border:none; cursor:pointer; margin-right:6px; }
-    .edit-btn { background:#FFA000; } .delete-btn { background:#f44336; }
-    #status { text-align:center; margin-top:8px; font-weight:600; color:#666; min-height:20px; }
+    .row { display: flex; gap: 10px; }
+    .col { flex: 1; }
+    .button-row { display: flex; gap: 10px; margin-top: 10px; }
+    button { flex: 1; padding: 10px; border: none; border-radius: 6px; color: #fff; cursor: pointer; }
+    #saveBtn { background: #4CAF50; }
+    #saveBtn:hover { background: #45a049; }
+    #logoutBtn { background: #f44336; }
+    #logoutBtn:hover { background: #d32f2f; }
+    #loginBtn { background: #2196F3; }
+    #loginBtn:hover { background: #1e88e5; }
+    #filterBtn { background: #2196F3; }
+    #filterBtn:hover { background: #1e88e5; }
+    #resetFilterBtn { background: #607D8B; }
+    #resetFilterBtn:hover { background: #546E7A; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; }
+    th, td { border: 1px solid #eee; padding: 8px; font-size: 14px; vertical-align: middle; }
+    th { background: #fafafa; }
+    .thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; display: block; }
+    .action-btn { padding: 6px 8px; border-radius: 4px; color: #fff; border: none; cursor: pointer; margin-right: 6px; }
+    .edit-btn { background: #FFA000; }
+    .delete-btn { background: #f44336; }
+    #status { text-align: center; margin-top: 8px; font-weight: 600; color: #666; min-height: 20px; }
   </style>
 </head>
-
 <body>
   <!-- Login -->
   <div class="container" id="loginContainer">
     <div class="form-container">
-      <h1>CMS Login</h1>
-      <input type="email" id="emailInput" placeholder="Email">
-      <input type="password" id="passwordInput" placeholder="Password">
+      <h1>管理系統登入</h1>
+      <input type="email" id="emailInput" placeholder="電郵">
+      <input type="password" id="passwordInput" placeholder="密碼">
       <div class="button-row">
-        <button id="loginBtn" onclick="login()" style="background:#2196F3">Login</button>
+        <button id="loginBtn" onclick="login()">登入</button>
       </div>
       <div id="status"></div>
     </div>
@@ -68,20 +75,20 @@
         <div class="col">
           <label>月份 (可多選)</label>
           <select id="monthSelect" multiple>
-            <option value="January">January</option><option value="February">February</option>
-            <option value="March">March</option><option value="April">April</option>
-            <option value="May">May</option><option value="June">June</option>
-            <option value="July">July</option><option value="August">August</option>
-            <option value="September">September</option><option value="October">October</option>
-            <option value="November">November</option><option value="December">December</option>
+            <option value="January">一月</option><option value="February">二月</option>
+            <option value="March">三月</option><option value="April">四月</option>
+            <option value="May">五月</option><option value="June">六月</option>
+            <option value="July">七月</option><option value="August">八月</option>
+            <option value="September">九月</option><option value="October">十月</option>
+            <option value="November">十一月</option><option value="December">十二月</option>
           </select>
         </div>
 
         <div class="col">
           <label>拍攝類型 (可多選)</label>
           <select id="typeSelect" multiple>
-            <option value="sunset">Sunset</option><option value="sunrise">Sunrise</option>
-            <option value="night_view">Night View</option><option value="starry_sky">Starry Sky</option>
+            <option value="sunset">日落</option><option value="sunrise">日出</option>
+            <option value="night_view">夜景</option><option value="starry_sky">星空</option>
           </select>
         </div>
       </div>
@@ -111,21 +118,21 @@
         <div class="col">
           <label>標籤 (可多選)</label>
           <select id="tagSelect" multiple>
-            <option value="mountain">Mountain</option><option value="sea">Sea</option>
-            <option value="city">City</option><option value="hidden_spot">Hidden Spot</option>
-            <option value="popular">Popular</option>
+            <option value="mountain">山景</option><option value="sea">海景</option>
+            <option value="city">城市</option><option value="hidden_spot">隱秘地點</option>
+            <option value="popular">熱門</option>
           </select>
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label>地圖連結 (Google Map Pin)</label>
+          <label>地圖連結</label>
           <input type="url" id="mapPinInput" placeholder="輸入 Google Map URL">
         </div>
         <div class="col">
-          <label>Image URL (圖片連結)</label>
-          <input type="url" id="imageUrlInput" placeholder="輸入圖片外部連結 (jpg/png) ">
+          <label>圖片連結</label>
+          <input type="url" id="imageUrlInput" placeholder="輸入圖片外部連結 (jpg/png)">
         </div>
       </div>
 
@@ -137,6 +144,61 @@
     </div>
 
     <h2>地點列表</h2>
+    <div class="form-container">
+      <h3>篩選條件</h3>
+      <div class="row">
+        <div class="col">
+          <label>地點名稱</label>
+          <input type="text" id="filterNameInput" placeholder="輸入地點名稱（模糊搜尋）">
+        </div>
+        <div class="col">
+          <label>月份</label>
+          <select id="filterMonthSelect">
+            <option value="">全部</option>
+            <option value="January">一月</option><option value="February">二月</option>
+            <option value="March">三月</option><option value="April">四月</option>
+            <option value="May">五月</option><option value="June">六月</option>
+            <option value="July">七月</option><option value="August">八月</option>
+            <option value="September">九月</option><option value="October">十月</option>
+            <option value="November">十一月</option><option value="December">十二月</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>拍攝類型</label>
+          <select id="filterTypeSelect">
+            <option value="">全部</option>
+            <option value="sunset">日落</option><option value="sunrise">日出</option>
+            <option value="night_view">夜景</option><option value="starry_sky">星空</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>難度</label>
+          <select id="filterDifficultySelect">
+            <option value="">全部</option>
+            <option value="Easy">簡單</option><option value="Medium">中等</option><option value="Hard">困難</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>標籤</label>
+          <select id="filterTagSelect">
+            <option value="">全部</option>
+            <option value="mountain">山景</option><option value="sea">海景</option>
+            <option value="city">城市</option><option value="hidden_spot">隱秘地點</option>
+            <option value="popular">熱門</option>
+          </select>
+        </div>
+        <div class="col"></div>
+      </div>
+      <div class="button-row">
+        <button id="filterBtn" onclick="applyFilter()">應用過濾</button>
+        <button id="resetFilterBtn" onclick="resetFilter()">重置過濾</button>
+      </div>
+    </div>
+
     <table id="locationsTable">
       <thead>
         <tr>
@@ -156,7 +218,7 @@
   </div>
 
   <script>
-    // Firebase 設定 (維持原本 key)
+    // Firebase 設定
     const firebaseConfig = {
       apiKey: "AIzaSyAXTlWcavjoa98iaiguoXx0MRyQ19B1Tns",
       authDomain: "myapp-test37.firebaseapp.com",
@@ -171,6 +233,7 @@
     const database = firebase.database();
     const locationsRef = database.ref('locations');
     let editingId = null;
+    let allLocations = []; // 儲存所有資料用於過濾
 
     // Auth state
     auth.onAuthStateChanged(user => {
@@ -182,7 +245,7 @@
     function login() {
       const email = emailInput.value.trim();
       const pw = passwordInput.value.trim();
-      if (!email || !pw) return showStatus("請輸入帳號密碼", true);
+      if (!email || !pw) return showStatus("請輸入電郵和密碼", true);
       auth.signInWithEmailAndPassword(email, pw)
         .then(() => showStatus("登入成功"))
         .catch(err => showStatus("登入錯誤：" + err.message, true));
@@ -225,32 +288,91 @@
         .catch(e => showStatus("儲存錯誤：" + e.message, true));
     }
 
-    function loadTable() {
+    function loadTable(filter = null) {
       locationsRef.once('value').then(snap => {
         const tbody = document.querySelector('#locationsTable tbody');
         tbody.innerHTML = '';
         const data = snap.val();
-        if (!data) return tbody.innerHTML = '<tr><td colspan="8">無資料</td></tr>';
-        Object.entries(data).forEach(([id, loc]) => {
+        allLocations = []; // 重置全域資料
+        if (!data) {
+          tbody.innerHTML = '<tr><td colspan="8">無資料</td></tr>';
+          return;
+        }
+
+        allLocations = Object.entries(data).map(([id, loc]) => ({ id, ...loc }));
+
+        let filteredLocations = allLocations;
+        if (filter) {
+          const { name, month, type, difficulty, tag } = filter;
+          filteredLocations = allLocations.filter(loc => {
+            const matchName = !name || loc.name.toLowerCase().includes(name.toLowerCase());
+            const matchMonth = !month || loc.months.includes(month);
+            const matchType = !type || loc.types.includes(type);
+            const matchDifficulty = !difficulty || loc.difficulty === difficulty;
+            const matchTag = !tag || loc.tags.includes(tag);
+            return matchName && matchMonth && matchType && matchDifficulty && matchTag;
+          });
+        }
+
+        if (filteredLocations.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8">無符合條件的資料</td></tr>';
+          return;
+        }
+
+        filteredLocations.forEach(loc => {
           const thumbHtml = loc.imageUrl ? `<a href="${loc.imageUrl}" target="_blank"><img src="${loc.imageUrl}" class="thumb" alt="thumb" onerror="this.style.display='none'"></a>` : '';
-          const months = (loc.months || []).join(', ');
-          const types = (loc.types || []).join(', ');
+          const months = (loc.months || []).map(m => {
+            const monthMap = {
+              January: '一月', February: '二月', March: '三月', April: '四月',
+              May: '五月', June: '六月', July: '七月', August: '八月',
+              September: '九月', October: '十月', November: '十一月', December: '十二月'
+            };
+            return monthMap[m] || m;
+          }).join(', ');
+          const types = (loc.types || []).map(t => {
+            const typeMap = {
+              sunset: '日落', sunrise: '日出', night_view: '夜景', starry_sky: '星空'
+            };
+            return typeMap[t] || t;
+          }).join(', ');
           tbody.innerHTML += `
             <tr>
-              <td>${id}</td>
+              <td>${loc.id}</td>
               <td>${thumbHtml}</td>
               <td>${loc.name || ''}</td>
               <td>${months}</td>
               <td>${types}</td>
               <td>${loc.bestTime || ''}</td>
-              <td>${loc.difficulty || ''}</td>
+              <td>${loc.difficulty ? {Easy: '簡單', Medium: '中等', Hard: '困難'}[loc.difficulty] || loc.difficulty : ''}</td>
               <td>
-                <button class="action-btn edit-btn" onclick="editLocation('${id}')">編輯</button>
-                <button class="action-btn delete-btn" onclick="deleteLocation('${id}')">刪除</button>
+                <button class="action-btn edit-btn" onclick="editLocation('${loc.id}')">編輯</button>
+                <button class="action-btn delete-btn" onclick="deleteLocation('${loc.id}')">刪除</button>
               </td>
             </tr>`;
         });
       }).catch(e => showStatus('載入錯誤：' + e.message, true));
+    }
+
+    function applyFilter() {
+      const name = document.getElementById('filterNameInput').value.trim();
+      const month = document.getElementById('filterMonthSelect').value;
+      const type = document.getElementById('filterTypeSelect').value;
+      const difficulty = document.getElementById('filterDifficultySelect').value;
+      const tag = document.getElementById('filterTagSelect').value;
+
+      const filter = { name, month, type, difficulty, tag };
+      loadTable(filter);
+      showStatus('已應用過濾');
+    }
+
+    function resetFilter() {
+      document.getElementById('filterNameInput').value = '';
+      document.getElementById('filterMonthSelect').value = '';
+      document.getElementById('filterTypeSelect').value = '';
+      document.getElementById('filterDifficultySelect').value = '';
+      document.getElementById('filterTagSelect').value = '';
+      loadTable();
+      showStatus('已重置過濾');
     }
 
     function editLocation(id) {
