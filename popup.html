@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; width: 300px; padding: 15px; background: #f5f5f5; }
+    h1 { text-align: center; font-size: 18px; margin-bottom: 20px; color: #333; }
+    .item { margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .label { font-weight: bold; color: #666; }
+    .value { font-size: 16px; color: #007bff; text-align: right; }
+    .loading { color: #999; font-style: italic; }
+    .error { color: #dc3545; }
+    #lastUpdate { text-align: center; font-size: 12px; color: #888; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Financial Dashboard</h1>
+  
+  <div class="item">
+    <div class="label">JPY to HKD</div>
+    <div class="value" id="jpyhkd">Loading...</div>
+  </div>
+  
+  <div class="item">
+    <div class="label">TQQQ</div>
+    <div class="value" id="tqqq">Loading...</div>
+  </div>
+  
+  <div class="item">
+    <div class="label">SOXL</div>
+    <div class="value" id="soxl">Loading...</div>
+  </div>
+  
+  <div class="item">
+    <div class="label">NET</div>
+    <div class="value" id="net">Loading...</div>
+  </div>
+  
+  <div class="item">
+    <div class="label">BTC (USD)</div>
+    <div class="value" id="btc">Loading...</div>
+  </div>
+  
+  <div class="item">
+    <div class="label">ETH (USD)</div>
+    <div class="value" id="eth">Loading...</div>
+  </div>
+  
+  <div id="lastUpdate">Last updated: Never</div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
