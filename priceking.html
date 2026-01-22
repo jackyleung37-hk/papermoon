@@ -76,6 +76,9 @@
             padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
             background: white;
         }
+        
+        /* 隱藏元素的動畫效果 */
+        .hidden-btn { display: none !important; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -103,7 +106,7 @@
                 <input type="number" id="input-p" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
-                <label id="lbl-qty" class="block text-[10px] font-black text-pink-500 mb-1 text-center">📦 份量</label>
+                <label id="lbl-qty" class="block text-[10px] font-black text-pink-500 mb-1 text-center">📦 數量</label>
                 <input type="number" id="input-q" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
@@ -112,21 +115,9 @@
             </div>
         </div>
 
-        <div class="flex gap-2">
-            <button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] border-4 border-purple-300 text-purple-600 font-black text-base flex items-center justify-center gap-1 active:bg-purple-50 transition-all">
-                <span class="material-symbols-rounded text-xl">add_circle</span>
-                <span id="txt-add">加一件</span>
-            </button>
-            <button onclick="compareAll()" class="flex-[1.5] h-14 rounded-[20px] bg-sweet-pink text-white font-black text-xl shadow-[0_4px_0_0_#ff4d6d] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2">
-                <span class="material-symbols-rounded text-xl">celebration</span>
-                <span id="txt-compare">立即比較</span>
-            </button>
-        </div>
+        <div id="btn-container" class="flex gap-2"></div>
 
-        <button onclick="clearAll()" class="w-full h-10 rounded-xl bg-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 active:bg-slate-300 transition-colors">
-            <span class="material-symbols-rounded text-lg">delete_sweep</span>
-            <span id="txt-clear">清除及重新計算</span>
-        </button>
+        <div id="clear-container"></div>
     </div>
 </footer>
 
@@ -172,9 +163,6 @@
         currentLang = currentLang === 'zh' ? 'en' : 'zh';
         const t = translations[currentLang];
         document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">shopping_bag</span>` + t.title;
-        document.getElementById('txt-add').innerText = t.add;
-        document.getElementById('txt-compare').innerText = t.compare;
-        document.getElementById('txt-clear').innerText = t.clear;
         document.getElementById('lbl-price').innerText = t.price;
         document.getElementById('lbl-qty').innerText = t.qty;
         document.getElementById('lbl-unit').innerText = t.unit;
@@ -207,34 +195,68 @@
 
     function renderList(winnerId = null) {
         const listContainer = document.getElementById('item-list');
+        const btnContainer = document.getElementById('btn-container');
+        const clearContainer = document.getElementById('clear-container');
         const t = translations[currentLang];
 
+        // 1. 列表渲染
         if (items.length === 0) {
             listContainer.innerHTML = `<div class="text-center py-10 text-slate-300"><span class="material-symbols-rounded text-6xl block mb-2">bakery_dining</span><p class="font-bold">${t.empty}</p></div>`;
-            return;
-        }
-        listContainer.innerHTML = '';
-
-        items.forEach((item, index) => {
-            const isWinner = item.id === winnerId;
-            const suffix = (item.type === 'piece') ? `${t.per} 1 ${item.pureUnit}` : `${t.per} 100${item.pureUnit}`;
-            const itemHtml = `
-                <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-orange-400 text-white w-9 h-9 flex items-center justify-center rounded-full font-black text-lg shrink-0 shadow-sm">${index + 1}</div>
-                        <div>
-                            <p class="text-xl font-black text-slate-700">$${item.p} <span class="text-sm font-bold text-slate-400">/ ${item.q}${currentLang==='en'?item.pureUnit:item.unitLabel}</span></p>
-                            <p class="text-[10px] font-bold text-pink-300 uppercase tracking-tight">${t.itemLabel} No.${index + 1}</p>
+        } else {
+            listContainer.innerHTML = '';
+            items.forEach((item, index) => {
+                const isWinner = item.id === winnerId;
+                const suffix = (item.type === 'piece') ? `${t.per} 1 ${item.pureUnit}` : `${t.per} 100${item.pureUnit}`;
+                const itemHtml = `
+                    <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-orange-400 text-white w-9 h-9 flex items-center justify-center rounded-full font-black text-lg shrink-0 shadow-sm">${index + 1}</div>
+                            <div>
+                                <p class="text-xl font-black text-slate-700">$${item.p} <span class="text-sm font-bold text-slate-400">/ ${item.q}${currentLang==='en'?item.pureUnit:item.unitLabel}</span></p>
+                                <p class="text-[10px] font-bold text-pink-300 uppercase tracking-tight">${t.itemLabel} No.${index + 1}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        ${isWinner ? `<p class="text-xs font-black text-sweet-pink-dark flex items-center justify-end gap-1">🎉 ${t.winning}</p>` : ''}
-                        <p class="text-2xl font-black ${isWinner ? 'text-sweet-pink-dark' : 'text-slate-700'}">$${item.finalPrice.toFixed(2)}</p>
-                        <p class="text-[10px] font-bold text-slate-400 italic">${suffix}</p>
-                    </div>
-                </div>`;
-            listContainer.insertAdjacentHTML('beforeend', itemHtml);
-        });
+                        <div class="text-right">
+                            ${isWinner ? `<p class="text-xs font-black text-sweet-pink-dark flex items-center justify-end gap-1">🎉 ${t.winning}</p>` : ''}
+                            <p class="text-2xl font-black ${isWinner ? 'text-sweet-pink-dark' : 'text-slate-700'}">$${item.finalPrice.toFixed(2)}</p>
+                            <p class="text-[10px] font-bold text-slate-400 italic">${suffix}</p>
+                        </div>
+                    </div>`;
+                listContainer.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
+
+        // 2. 處理「加一件」與「比較」按鈕邏輯
+        if (items.length < 2) {
+            // 少於兩件：只顯示 Full Width 的「加一件」
+            btnContainer.innerHTML = `
+                <button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] border-4 border-purple-300 text-purple-600 font-black text-base flex items-center justify-center gap-1 active:bg-purple-50 transition-all">
+                    <span class="material-symbols-rounded text-xl">add_circle</span>
+                    <span>${t.add}</span>
+                </button>`;
+        } else {
+            // 兩件或以上：顯示兩個按鈕
+            btnContainer.innerHTML = `
+                <button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] border-4 border-purple-300 text-purple-600 font-black text-base flex items-center justify-center gap-1 active:bg-purple-50 transition-all">
+                    <span class="material-symbols-rounded text-xl">add_circle</span>
+                    <span>${t.add}</span>
+                </button>
+                <button onclick="compareAll()" class="flex-[1.5] h-14 rounded-[20px] bg-sweet-pink text-white font-black text-xl shadow-[0_4px_0_0_#ff4d6d] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-rounded text-xl">celebration</span>
+                    <span>${t.compare}</span>
+                </button>`;
+        }
+
+        // 3. 處理「清除」按鈕邏輯
+        if (items.length >= 1) {
+            clearContainer.innerHTML = `
+                <button onclick="clearAll()" class="w-full h-10 mt-3 rounded-xl bg-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 active:bg-slate-300 transition-colors">
+                    <span class="material-symbols-rounded text-lg">delete_sweep</span>
+                    <span>${t.clear}</span>
+                </button>`;
+        } else {
+            clearContainer.innerHTML = '';
+        }
     }
 
     function compareAll() {
