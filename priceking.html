@@ -3,6 +3,12 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="格價王">
+    
     <title>Easy Price Buddy - Pro Edition</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto-Sans+TC:wght@700;900&display=swap" rel="stylesheet"/>
@@ -23,7 +29,12 @@
     </script>
     <style>
         .material-symbols-rounded { font-variation-settings: "FILL" 1, "wght" 700, "GRAD" 0, "opsz" 24 }
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffaf0; }
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #fffaf0;
+            /* 防止 iOS 橡皮筋回彈效果干擾 App 感 */
+            overscroll-behavior-y: none; 
+        }
         
         .compact-input {
             border: 3px solid #ffccd5 !important;
@@ -73,7 +84,7 @@
         </div>
 </main>
 
-<section class="bg-white border-t-8 border-pink-50 p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] shrink-0">
+<section class="bg-white border-t-8 border-pink-50 p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] shrink-0 pb-8 md:pb-4">
     <div class="max-w-md mx-auto">
         <div class="grid grid-cols-12 gap-2 mb-4 bg-pink-50 p-3 rounded-[24px] border-2 border-pink-100">
             <div class="col-span-4">
@@ -152,7 +163,6 @@
     function toggleLang() {
         currentLang = currentLang === 'zh' ? 'en' : 'zh';
         const t = translations[currentLang];
-        
         document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">shopping_bag</span>` + t.title;
         document.getElementById('txt-add').innerText = t.add;
         document.getElementById('txt-compare').innerText = t.compare;
@@ -160,37 +170,26 @@
         document.getElementById('lbl-price').innerText = t.price;
         document.getElementById('lbl-qty').innerText = t.qty;
         document.getElementById('lbl-unit').innerText = t.unit;
-        
         updateUnitSelect();
-        renderList(); // 切換語言時重新渲染，會觸發空狀態文字更新
+        renderList();
     }
 
     function addNewItem() {
         const pInput = document.getElementById('input-p');
         const qInput = document.getElementById('input-q');
         const uSel = document.getElementById('input-u');
-        
         const p = parseFloat(pInput.value);
         const q = parseFloat(qInput.value);
         const u = parseFloat(uSel.value);
         const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
         const unitLabel = uSel.options[uSel.selectedIndex].text;
-
         if (isNaN(p) || isNaN(q) || p <= 0 || q <= 0) return;
-
         const base = (type === 'piece') ? 1 : 100;
         const finalPrice = (p / (q * u)) * base;
-
-        items.push({ 
-            p, q, unitLabel, type, finalPrice, 
-            id: Date.now(), 
-            pureUnit: unitLabel.split(' ').pop() 
-        });
-        
+        items.push({ p, q, unitLabel, type, finalPrice, id: Date.now(), pureUnit: unitLabel.split(' ').pop() });
         pInput.value = '';
         qInput.value = '';
         renderList();
-        
         const scrollArea = document.getElementById('scroll-area');
         scrollArea.scrollTop = scrollArea.scrollHeight;
     }
@@ -198,23 +197,14 @@
     function renderList(winnerId = null) {
         const listContainer = document.getElementById('item-list');
         const t = translations[currentLang];
-
         if (items.length === 0) {
-            listContainer.innerHTML = `
-                <div class="text-center py-10 text-slate-300">
-                    <span class="material-symbols-rounded text-6xl block mb-2">bakery_dining</span>
-                    <p class="font-bold">${t.empty}</p>
-                </div>`;
+            listContainer.innerHTML = `<div class="text-center py-10 text-slate-300"><span class="material-symbols-rounded text-6xl block mb-2">bakery_dining</span><p class="font-bold">${t.empty}</p></div>`;
             return;
         }
         listContainer.innerHTML = '';
-
         items.forEach((item, index) => {
             const isWinner = item.id === winnerId;
-            const suffix = (item.type === 'piece') 
-                ? `${t.per} 1 ${item.pureUnit}` 
-                : `${t.per} 100${item.pureUnit}`;
-            
+            const suffix = (item.type === 'piece') ? `${t.per} 1 ${item.pureUnit}` : `${t.per} 100${item.pureUnit}`;
             const itemHtml = `
                 <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
                     <div class="flex items-center gap-4">
@@ -229,8 +219,7 @@
                         <p class="text-2xl font-black ${isWinner ? 'text-sweet-pink-dark' : 'text-slate-700'}">$${item.finalPrice.toFixed(2)}</p>
                         <p class="text-[10px] font-bold text-slate-400 italic">${suffix}</p>
                     </div>
-                </div>
-            `;
+                </div>`;
             listContainer.insertAdjacentHTML('beforeend', itemHtml);
         });
     }
@@ -238,9 +227,8 @@
     function compareAll() {
         if (items.length < 2) return;
         const firstType = items[0].type;
-        const mismatch = items.some(item => item.type !== firstType);
-        if (mismatch) {
-            alert(currentLang === 'zh' ? "⚠️ 單位唔同類呀 (例如: 克 同 個 唔比得架)！" : "⚠️ Unit mismatch! (e.g. g vs pcs)");
+        if (items.some(item => item.type !== firstType)) {
+            alert(currentLang === 'zh' ? "⚠️ 單位唔同類呀！" : "⚠️ Unit mismatch!");
             return;
         }
         const minPrice = Math.min(...items.map(i => i.finalPrice));
@@ -248,12 +236,7 @@
         renderList(winner.id);
     }
 
-    function clearAll() {
-        items = [];
-        renderList();
-    }
-
-    // 初始化界面
+    function clearAll() { items = []; renderList(); }
     updateUnitSelect();
     renderList();
 </script>
