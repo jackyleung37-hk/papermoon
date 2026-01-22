@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <title>Easy Price Buddy - Pro Edition</title>
+    <title>超巿格價王</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto-Sans+TC:wght@700;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -83,7 +83,7 @@
 <header class="bg-white border-b-4 border-pink-100 px-4 shadow-sm shrink-0 z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
         <h1 id="lang-title" class="text-xl font-black text-sweet-pink-dark flex items-center gap-2">
-            <span class="material-symbols-rounded fill-1">shopping_bag</span>格價王
+            <span class="material-symbols-rounded fill-1">shopping_bag</span>超巿格價王
         </h1>
         <button onclick="toggleLang()" class="bg-blue-500 text-white px-4 py-1 rounded-xl text-sm font-black shadow-md flex items-center gap-1">
             <span class="material-symbols-rounded text-xs">translate</span>繁/EN
@@ -125,7 +125,7 @@
 
         <button onclick="clearAll()" class="w-full h-10 rounded-xl bg-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 active:bg-slate-300 transition-colors">
             <span class="material-symbols-rounded text-lg">delete_sweep</span>
-            <span id="txt-clear">清除全部數據</span>
+            <span id="txt-clear">清除及重新計算</span>
         </button>
     </div>
 </footer>
@@ -136,9 +136,9 @@
 
     const translations = {
         zh: { 
-            title: "格價王", add: "加一件", compare: "幫我格價！", clear: "清除全部數據", 
+            title: "超巿格價王", add: "加一件", compare: "幫我格價！", clear: "清除及重新計算", 
             winning: "最抵買！", per: "每", itemLabel: "商品", empty: "仲未有野比呀～加一件先啦！",
-            price: "💰 價錢 ($)", qty: "📦 份量", unit: "✨ 單位",
+            price: "💰 價錢 ($)", qty: "📦 數量", unit: "✨ 單位",
             units: [
                 { val: 1, type: "weight", text: "克 g" },
                 { val: 1000, type: "weight", text: "公斤 kg" },
@@ -241,7 +241,7 @@
         if (items.length < 2) return;
         const firstType = items[0].type;
         if (items.some(item => item.type !== firstType)) {
-            alert(currentLang === 'zh' ? "⚠️ 單位唔同類呀！" : "⚠️ Unit mismatch!");
+            alert(currentLang === 'zh' ? "⚠️ 單位唔同類，比較唔到呀！" : "⚠️ Unit mismatch!");
             return;
         }
         const minPrice = Math.min(...items.map(i => i.finalPrice));
