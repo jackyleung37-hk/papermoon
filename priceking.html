@@ -103,6 +103,18 @@
         #guide-zone.hide {
             display: none;
         }
+
+        /* 移除斜體並稍微加大標籤字體 */
+        .input-label {
+            display: block;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 900;
+            color: #ec4899; /* pink-500 */
+            margin-bottom: 0.25rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: -0.025em;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -133,15 +145,15 @@
 
         <div class="grid grid-cols-12 gap-2 bg-pink-50 p-3 rounded-[24px] border-2 border-pink-100">
             <div class="col-span-4">
-                <label id="lbl-price" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">價錢 ($)</label>
+                <label id="lbl-price" class="input-label">價錢 ($)</label>
                 <input type="number" id="input-p" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
-                <label id="lbl-qty" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">數量</label>
+                <label id="lbl-qty" class="input-label">數量/重量</label>
                 <input type="number" id="input-q" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
-                <label id="lbl-unit" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">單位</label>
+                <label id="lbl-unit" class="input-label">單位</label>
                 <select id="input-u" class="compact-input w-full outline-none py-1 text-base appearance-none"></select>
             </div>
         </div>
@@ -160,7 +172,7 @@
             title: "邊個抵買啲？", sub: "超市格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
             winning: "最抵買！", per: "每", itemLabel: "商品", empty: "準備好格價未？",
             guide1: "請輸入第一件商品 ✨", guide2: "好！再加多一件比比看 ⚖️",
-            price: "價錢 ($)", qty: "數量", unit: "單位", langBtn: "EN",
+            price: "價錢 ($)", qty: "數量/重量", unit: "單位", langBtn: "EN",
             units: [
                 { val: 1, type: "weight", text: "克 g" }, { val: 1000, type: "weight", text: "公斤 kg" },
                 { val: 1, type: "liquid", text: "毫升 ml" }, { val: 1000, type: "liquid", text: "升 L" },
@@ -171,7 +183,7 @@
             title: "Which is Cheaper?", sub: "Price Calculator", add: "Add Item", compare: "Compare!", clear: "Clear All", 
             winning: "Winner!", per: "per", itemLabel: "Item", empty: "Ready to calc?",
             guide1: "Enter 1st item price ✨", guide2: "Great! Add one more ⚖️",
-            price: "Price ($)", qty: "Quantity", unit: "Unit", langBtn: "中",
+            price: "Price ($)", qty: "Qty/Weight", unit: "Unit", langBtn: "中",
             units: [
                 { val: 1, type: "weight", text: "g" }, { val: 1000, type: "weight", text: "kg" },
                 { val: 1, type: "ml", text: "ml" }, { val: 1000, type: "L", text: "L" },
@@ -214,9 +226,11 @@
         const u = parseFloat(uSel.value);
         const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
         const unitLabel = uSel.options[uSel.selectedIndex].text;
-        const finalPrice = (p / (q * u)) * (type === 'piece' ? 1 : 100);
+        
+        const isSmallUnit = (type === 'weight' && u === 1) || (type === 'liquid' && u === 1);
+        const finalPrice = (p / (q * u)) * (isSmallUnit ? 100 : 1);
 
-        items.push({ p, q, unitLabel, type, finalPrice, id: Date.now(), pureUnit: unitLabel.split(' ').pop() });
+        items.push({ p, q, unitLabel, type, finalPrice, id: Date.now(), pureUnit: unitLabel.split(' ').pop(), isSmallUnit });
         pInput.value = ''; qInput.value = '';
         renderList();
         
@@ -247,7 +261,9 @@
             listContainer.innerHTML = '';
             items.forEach((item, index) => {
                 const isWinner = item.id === winnerId;
-                const suffix = (item.type === 'piece') ? `${t.per} 1 ${item.pureUnit}` : `${t.per} 100${item.pureUnit}`;
+                const baseVal = item.isSmallUnit ? "100" : "1";
+                const suffix = `${t.per} ${baseVal}${item.pureUnit}`;
+
                 listContainer.insertAdjacentHTML('beforeend', `
                     <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
                         <div class="flex items-center gap-4">
@@ -265,14 +281,11 @@
             });
         }
 
-        // 「加一件」按鈕改為實心深色背景
         btnContainer.innerHTML = `<button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] bg-slate-800 text-white font-black text-base flex items-center justify-center gap-1 active:bg-slate-700 transition-all shadow-md"><span>${t.add}</span></button>`;
-        
         if (items.length >= 2) {
             btnContainer.innerHTML += `<button onclick="compareAll()" class="flex-[1.5] h-14 rounded-[20px] bg-sweet-pink text-white font-black text-xl shadow-[0_4px_0_0_#ff4d6d] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2"><span>${t.compare}</span></button>`;
         }
 
-        // 「清除內容」提高背景深度與文字對比度
         clearContainer.innerHTML = items.length >= 1 ? `<button onclick="clearAll()" class="w-full h-10 mt-2 bg-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest active:bg-slate-300 transition-all">${t.clear}</button>` : '';
     }
 
