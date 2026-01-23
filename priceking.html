@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <title>超巿格價王</title>
+    <title>邊個抵買啲？- 超巿格價計算機</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto-Sans+TC:wght@700;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -70,26 +70,53 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1rem;
+            transition: all 0.3s ease;
         }
 
         footer {
             padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
             background: white;
+            transition: all 0.3s ease;
         }
-        
-        /* 隱藏元素的動畫效果 */
-        .hidden-btn { display: none !important; }
+
+        .helper-bubble {
+            position: relative;
+            background: #ff8fa3;
+            color: white;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-weight: 900;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.2);
+        }
+        .helper-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #ff8fa3 transparent transparent;
+        }
+
+        #guide-zone.hide {
+            display: none;
+        }
     </style>
 </head>
 <body class="text-slate-800">
 
 <header class="bg-white border-b-4 border-pink-100 px-4 shadow-sm shrink-0 z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
-        <h1 id="lang-title" class="text-xl font-black text-sweet-pink-dark flex items-center gap-2">
-            <span class="material-symbols-rounded fill-1">shopping_bag</span>超巿格價王
-        </h1>
-        <button onclick="toggleLang()" class="bg-blue-500 text-white px-4 py-1 rounded-xl text-sm font-black shadow-md flex items-center gap-1">
-            <span class="material-symbols-rounded text-xs">translate</span>繁/EN
+        <div>
+            <h1 id="lang-title" class="text-xl font-black text-sweet-pink-dark flex items-center gap-2">
+                <span class="material-symbols-rounded fill-1">calculate</span>邊個抵買啲？
+            </h1>
+            <p id="lang-sub" class="text-xs font-black text-slate-400 tracking-wider">超市格價計算機</p>
+        </div>
+        <button id="lang-btn" onclick="toggleLang()" class="bg-blue-500 text-white px-3 py-1 rounded-xl text-xs font-black shadow-md flex items-center gap-1">
+            <span class="material-symbols-rounded text-xs">translate</span>EN
         </button>
     </div>
 </header>
@@ -100,23 +127,26 @@
 
 <footer class="bg-white border-t-8 border-pink-50 p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] shrink-0 z-10">
     <div class="max-w-md mx-auto space-y-3">
+        <div id="guide-zone" class="text-center mb-2">
+            <div id="helper-bubble" class="helper-bubble">請輸入第一件商品 ✨</div>
+        </div>
+
         <div class="grid grid-cols-12 gap-2 bg-pink-50 p-3 rounded-[24px] border-2 border-pink-100">
             <div class="col-span-4">
-                <label id="lbl-price" class="block text-[10px] font-black text-pink-500 mb-1 text-center">💰 價錢 ($)</label>
+                <label id="lbl-price" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">價錢 ($)</label>
                 <input type="number" id="input-p" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
-                <label id="lbl-qty" class="block text-[10px] font-black text-pink-500 mb-1 text-center">📦 數量</label>
+                <label id="lbl-qty" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">數量</label>
                 <input type="number" id="input-q" placeholder="0" class="compact-input w-full outline-none py-1 text-lg">
             </div>
             <div class="col-span-4">
-                <label id="lbl-unit" class="block text-[10px] font-black text-pink-500 mb-1 text-center">✨ 單位</label>
-                <select id="input-u" class="compact-input w-full outline-none py-1 text-base"></select>
+                <label id="lbl-unit" class="block text-[10px] font-black text-pink-500 mb-1 text-center italic uppercase tracking-tighter">單位</label>
+                <select id="input-u" class="compact-input w-full outline-none py-1 text-base appearance-none"></select>
             </div>
         </div>
 
         <div id="btn-container" class="flex gap-2"></div>
-
         <div id="clear-container"></div>
     </div>
 </footer>
@@ -127,26 +157,24 @@
 
     const translations = {
         zh: { 
-            title: "超巿格價王", add: "加一件", compare: "幫我格價！", clear: "清除及重新計算", 
-            winning: "最抵買！", per: "每", itemLabel: "商品", empty: "仲未有野比呀～加一件先啦！",
-            price: "💰 價錢 ($)", qty: "📦 數量", unit: "✨ 單位",
+            title: "邊個抵買啲？", sub: "超市格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
+            winning: "最抵買！", per: "每", itemLabel: "商品", empty: "準備好格價未？",
+            guide1: "請輸入第一件商品 ✨", guide2: "好！再加多一件比比看 ⚖️",
+            price: "價錢 ($)", qty: "數量", unit: "單位", langBtn: "EN",
             units: [
-                { val: 1, type: "weight", text: "克 g" },
-                { val: 1000, type: "weight", text: "公斤 kg" },
-                { val: 1, type: "liquid", text: "毫升 ml" },
-                { val: 1000, type: "liquid", text: "升 L" },
+                { val: 1, type: "weight", text: "克 g" }, { val: 1000, type: "weight", text: "公斤 kg" },
+                { val: 1, type: "liquid", text: "毫升 ml" }, { val: 1000, type: "liquid", text: "升 L" },
                 { val: 1, type: "piece", text: "個 pcs" }
             ]
         },
         en: { 
-            title: "Price King", add: "Add Item", compare: "Compare!", clear: "Clear All", 
-            winning: "Best Choice!", per: "per", itemLabel: "Item", empty: "Nothing to compare yet!",
-            price: "💰 Price ($)", qty: "📦 Qty", unit: "✨ Unit",
+            title: "Which is Cheaper?", sub: "Price Calculator", add: "Add Item", compare: "Compare!", clear: "Clear All", 
+            winning: "Winner!", per: "per", itemLabel: "Item", empty: "Ready to calc?",
+            guide1: "Enter 1st item price ✨", guide2: "Great! Add one more ⚖️",
+            price: "Price ($)", qty: "Quantity", unit: "Unit", langBtn: "中",
             units: [
-                { val: 1, type: "weight", text: "g" },
-                { val: 1000, type: "weight", text: "kg" },
-                { val: 1, type: "ml", text: "ml" },
-                { val: 1000, type: "L", text: "L" },
+                { val: 1, type: "weight", text: "g" }, { val: 1000, type: "weight", text: "kg" },
+                { val: 1, type: "ml", text: "ml" }, { val: 1000, type: "L", text: "L" },
                 { val: 1, type: "piece", text: "pcs" }
             ]
         }
@@ -162,10 +190,15 @@
     function toggleLang() {
         currentLang = currentLang === 'zh' ? 'en' : 'zh';
         const t = translations[currentLang];
-        document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">shopping_bag</span>` + t.title;
+        
+        document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">calculate</span>` + t.title;
+        document.getElementById('lang-sub').innerText = t.sub;
+        document.getElementById('lang-btn').innerHTML = `<span class="material-symbols-rounded text-xs">translate</span>` + t.langBtn;
+        
         document.getElementById('lbl-price').innerText = t.price;
         document.getElementById('lbl-qty').innerText = t.qty;
         document.getElementById('lbl-unit').innerText = t.unit;
+
         updateUnitSelect();
         renderList();
     }
@@ -176,14 +209,12 @@
         const uSel = document.getElementById('input-u');
         const p = parseFloat(pInput.value);
         const q = parseFloat(qInput.value);
+        if (isNaN(p) || isNaN(q) || p <= 0 || q <= 0) return;
+
         const u = parseFloat(uSel.value);
         const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
         const unitLabel = uSel.options[uSel.selectedIndex].text;
-
-        if (isNaN(p) || isNaN(q) || p <= 0 || q <= 0) return;
-
-        const base = (type === 'piece') ? 1 : 100;
-        const finalPrice = (p / (q * u)) * base;
+        const finalPrice = (p / (q * u)) * (type === 'piece' ? 1 : 100);
 
         items.push({ p, q, unitLabel, type, finalPrice, id: Date.now(), pureUnit: unitLabel.split(' ').pop() });
         pInput.value = ''; qInput.value = '';
@@ -197,78 +228,58 @@
         const listContainer = document.getElementById('item-list');
         const btnContainer = document.getElementById('btn-container');
         const clearContainer = document.getElementById('clear-container');
+        const helper = document.getElementById('helper-bubble');
+        const guideZone = document.getElementById('guide-zone');
         const t = translations[currentLang];
 
-        // 1. 列表渲染
         if (items.length === 0) {
-            listContainer.innerHTML = `<div class="text-center py-10 text-slate-300"><span class="material-symbols-rounded text-6xl block mb-2">bakery_dining</span><p class="font-bold">${t.empty}</p></div>`;
+            guideZone.classList.remove('hide');
+            helper.innerText = t.guide1;
+            listContainer.innerHTML = `<div class="text-center py-16 text-slate-200 opacity-50"><span class="material-symbols-rounded text-8xl block mb-2">balance</span><p class="font-bold">${t.empty}</p></div>`;
+        } else if (items.length === 1) {
+            guideZone.classList.remove('hide');
+            helper.innerText = t.guide2;
         } else {
+            guideZone.classList.add('hide');
+        }
+
+        if (items.length > 0) {
             listContainer.innerHTML = '';
             items.forEach((item, index) => {
                 const isWinner = item.id === winnerId;
                 const suffix = (item.type === 'piece') ? `${t.per} 1 ${item.pureUnit}` : `${t.per} 100${item.pureUnit}`;
-                const itemHtml = `
+                listContainer.insertAdjacentHTML('beforeend', `
                     <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
                         <div class="flex items-center gap-4">
-                            <div class="bg-orange-400 text-white w-9 h-9 flex items-center justify-center rounded-full font-black text-lg shrink-0 shadow-sm">${index + 1}</div>
+                            <div class="bg-slate-800 text-white w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm shrink-0 shadow-sm">${index + 1}</div>
                             <div>
-                                <p class="text-xl font-black text-slate-700">$${item.p} <span class="text-sm font-bold text-slate-400">/ ${item.q}${currentLang==='en'?item.pureUnit:item.unitLabel}</span></p>
-                                <p class="text-[10px] font-bold text-pink-300 uppercase tracking-tight">${t.itemLabel} No.${index + 1}</p>
+                                <p class="text-lg font-black text-slate-700">$${item.p} <span class="text-xs font-bold text-slate-400">/ ${item.q}${item.pureUnit}</span></p>
                             </div>
                         </div>
                         <div class="text-right">
-                            ${isWinner ? `<p class="text-xs font-black text-sweet-pink-dark flex items-center justify-end gap-1">🎉 ${t.winning}</p>` : ''}
+                            ${isWinner ? `<p class="text-[10px] font-black text-sweet-pink-dark">🎉 ${t.winning}</p>` : ''}
                             <p class="text-2xl font-black ${isWinner ? 'text-sweet-pink-dark' : 'text-slate-700'}">$${item.finalPrice.toFixed(2)}</p>
-                            <p class="text-[10px] font-bold text-slate-400 italic">${suffix}</p>
+                            <p class="text-[10px] font-bold text-slate-300 italic">${suffix}</p>
                         </div>
-                    </div>`;
-                listContainer.insertAdjacentHTML('beforeend', itemHtml);
+                    </div>`);
             });
         }
 
-        // 2. 處理「加一件」與「比較」按鈕邏輯
-        if (items.length < 2) {
-            // 少於兩件：只顯示 Full Width 的「加一件」
-            btnContainer.innerHTML = `
-                <button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] border-4 border-purple-300 text-purple-600 font-black text-base flex items-center justify-center gap-1 active:bg-purple-50 transition-all">
-                    <span class="material-symbols-rounded text-xl">add_circle</span>
-                    <span>${t.add}</span>
-                </button>`;
-        } else {
-            // 兩件或以上：顯示兩個按鈕
-            btnContainer.innerHTML = `
-                <button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] border-4 border-purple-300 text-purple-600 font-black text-base flex items-center justify-center gap-1 active:bg-purple-50 transition-all">
-                    <span class="material-symbols-rounded text-xl">add_circle</span>
-                    <span>${t.add}</span>
-                </button>
-                <button onclick="compareAll()" class="flex-[1.5] h-14 rounded-[20px] bg-sweet-pink text-white font-black text-xl shadow-[0_4px_0_0_#ff4d6d] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-rounded text-xl">celebration</span>
-                    <span>${t.compare}</span>
-                </button>`;
+        // 「加一件」按鈕改為實心深色背景
+        btnContainer.innerHTML = `<button onclick="addNewItem()" class="flex-1 h-14 rounded-[20px] bg-slate-800 text-white font-black text-base flex items-center justify-center gap-1 active:bg-slate-700 transition-all shadow-md"><span>${t.add}</span></button>`;
+        
+        if (items.length >= 2) {
+            btnContainer.innerHTML += `<button onclick="compareAll()" class="flex-[1.5] h-14 rounded-[20px] bg-sweet-pink text-white font-black text-xl shadow-[0_4px_0_0_#ff4d6d] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2"><span>${t.compare}</span></button>`;
         }
 
-        // 3. 處理「清除」按鈕邏輯
-        if (items.length >= 1) {
-            clearContainer.innerHTML = `
-                <button onclick="clearAll()" class="w-full h-10 mt-3 rounded-xl bg-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 active:bg-slate-300 transition-colors">
-                    <span class="material-symbols-rounded text-lg">delete_sweep</span>
-                    <span>${t.clear}</span>
-                </button>`;
-        } else {
-            clearContainer.innerHTML = '';
-        }
+        // 「清除內容」提高背景深度與文字對比度
+        clearContainer.innerHTML = items.length >= 1 ? `<button onclick="clearAll()" class="w-full h-10 mt-2 bg-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest active:bg-slate-300 transition-all">${t.clear}</button>` : '';
     }
 
     function compareAll() {
         if (items.length < 2) return;
-        const firstType = items[0].type;
-        if (items.some(item => item.type !== firstType)) {
-            alert(currentLang === 'zh' ? "⚠️ 單位唔同類，比較唔到呀！" : "⚠️ Unit mismatch!");
-            return;
-        }
         const minPrice = Math.min(...items.map(i => i.finalPrice));
-        const winner = items.find(i => i.finalPrice === minPrice);
-        renderList(winner.id);
+        renderList(items.find(i => i.finalPrice === minPrice).id);
     }
 
     function clearAll() { items = []; renderList(); }
