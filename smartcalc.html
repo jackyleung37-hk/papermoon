@@ -104,12 +104,11 @@
             display: none;
         }
 
-        /* 移除斜體並稍微加大標籤字體 */
         .input-label {
             display: block;
-            font-size: 0.75rem; /* text-xs */
+            font-size: 0.75rem;
             font-weight: 900;
-            color: #ec4899; /* pink-500 */
+            color: #ec4899;
             margin-bottom: 0.25rem;
             text-align: center;
             text-transform: uppercase;
@@ -170,7 +169,8 @@
     const translations = {
         zh: { 
             title: "邊個抵買啲？", sub: "超市格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
-            winning: "最抵買！", per: "每", itemLabel: "商品", empty: "準備好格價未？",
+            winning: "最抵買！", per: "每", itemLabel: "商品",
+            introDesc: "超市優惠眼花繚亂？大包裝係咪一定抵？唔緊要，只要輸入價錢與數量，我即時話你知邊件先係最抵！",
             guide1: "請輸入第一件商品 ✨", guide2: "好！再加多一件比比看 ⚖️",
             price: "價錢 ($)", qty: "數量/重量", unit: "單位", langBtn: "EN",
             units: [
@@ -181,12 +181,13 @@
         },
         en: { 
             title: "Which is Cheaper?", sub: "Price Calculator", add: "Add Item", compare: "Compare!", clear: "Clear All", 
-            winning: "Winner!", per: "per", itemLabel: "Item", empty: "Ready to calc?",
+            winning: "Winner!", per: "per", itemLabel: "Item",
+            introDesc: "Dazzled by supermarket deals? Is bulk buying always better? No worries! Just enter the price and quantity, and I'll tell you which one is the real steal!",
             guide1: "Enter 1st item price ✨", guide2: "Great! Add one more ⚖️",
             price: "Price ($)", qty: "Qty/Weight", unit: "Unit", langBtn: "中",
             units: [
                 { val: 1, type: "weight", text: "g" }, { val: 1000, type: "weight", text: "kg" },
-                { val: 1, type: "ml", text: "ml" }, { val: 1000, type: "L", text: "L" },
+                { val: 1, type: "liquid", text: "ml" }, { val: 1000, type: "liquid", text: "L" },
                 { val: 1, type: "piece", text: "pcs" }
             ]
         }
@@ -194,7 +195,11 @@
 
     function updateUnitSelect() {
         const uSel = document.getElementById('input-u');
-        uSel.innerHTML = translations[currentLang].units.map(u => 
+        const t = translations[currentLang];
+        const lockedType = items.length > 0 ? items[0].type : null;
+        const availableUnits = lockedType ? t.units.filter(u => u.type === lockedType) : t.units;
+
+        uSel.innerHTML = availableUnits.map(u => 
             `<option value="${u.val}" data-type="${u.type}">${u.text}</option>`
         ).join('');
     }
@@ -202,15 +207,12 @@
     function toggleLang() {
         currentLang = currentLang === 'zh' ? 'en' : 'zh';
         const t = translations[currentLang];
-        
         document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">calculate</span>` + t.title;
         document.getElementById('lang-sub').innerText = t.sub;
         document.getElementById('lang-btn').innerHTML = `<span class="material-symbols-rounded text-xs">translate</span>` + t.langBtn;
-        
         document.getElementById('lbl-price').innerText = t.price;
         document.getElementById('lbl-qty').innerText = t.qty;
         document.getElementById('lbl-unit').innerText = t.unit;
-
         updateUnitSelect();
         renderList();
     }
@@ -226,12 +228,17 @@
         const u = parseFloat(uSel.value);
         const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
         const unitLabel = uSel.options[uSel.selectedIndex].text;
-        
-        const isSmallUnit = (type === 'weight' && u === 1) || (type === 'liquid' && u === 1);
-        const finalPrice = (p / (q * u)) * (isSmallUnit ? 100 : 1);
+        const isPiece = (type === 'piece');
+        const multiplier = isPiece ? 1 : 100;
+        const finalPrice = (p / (q * u)) * multiplier;
 
-        items.push({ p, q, unitLabel, type, finalPrice, id: Date.now(), pureUnit: unitLabel.split(' ').pop(), isSmallUnit });
+        items.push({ 
+            p, q, unitLabel, type, finalPrice, id: Date.now(), 
+            pureUnit: unitLabel.split(' ').pop(), isPiece 
+        });
+        
         pInput.value = ''; qInput.value = '';
+        updateUnitSelect();
         renderList();
         
         const scrollArea = document.getElementById('scroll-area');
@@ -249,7 +256,12 @@
         if (items.length === 0) {
             guideZone.classList.remove('hide');
             helper.innerText = t.guide1;
-            listContainer.innerHTML = `<div class="text-center py-16 text-slate-200 opacity-50"><span class="material-symbols-rounded text-8xl block mb-2">balance</span><p class="font-bold">${t.empty}</p></div>`;
+            listContainer.innerHTML = `
+                <div class="flex items-center justify-center min-h-[40vh] px-8">
+                    <p class="text-slate-800 font-bold leading-relaxed text-center">
+                        ${t.introDesc}
+                    </p>
+                </div>`;
         } else if (items.length === 1) {
             guideZone.classList.remove('hide');
             helper.innerText = t.guide2;
@@ -261,8 +273,9 @@
             listContainer.innerHTML = '';
             items.forEach((item, index) => {
                 const isWinner = item.id === winnerId;
-                const baseVal = item.isSmallUnit ? "100" : "1";
-                const suffix = `${t.per} ${baseVal}${item.pureUnit}`;
+                let baseVal = item.isPiece ? "1" : "100";
+                let displayUnit = item.isPiece ? item.pureUnit : (item.type === 'weight' ? 'g' : 'ml');
+                const suffix = `${t.per} ${baseVal}${displayUnit}`;
 
                 listContainer.insertAdjacentHTML('beforeend', `
                     <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
@@ -295,7 +308,12 @@
         renderList(items.find(i => i.finalPrice === minPrice).id);
     }
 
-    function clearAll() { items = []; renderList(); }
+    function clearAll() { 
+        items = []; 
+        updateUnitSelect();
+        renderList(); 
+    }
+
     updateUnitSelect();
     renderList();
 </script>
