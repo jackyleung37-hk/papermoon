@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <title>邊個抵買啲？- 超巿格價計算機</title>
+    <title>SmartCalc - 超巿格價計算機</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto-Sans+TC:wght@700;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -71,6 +71,7 @@
             -webkit-overflow-scrolling: touch;
             padding: 1rem;
             transition: all 0.3s ease;
+            scroll-behavior: smooth; /* 增加平滑滾動效果 */
         }
 
         footer {
@@ -81,13 +82,13 @@
 
         .helper-bubble {
             position: relative;
-            background: #ff8fa3;
+            background: #ff4d6d;
             color: white;
             border-radius: 20px;
             padding: 12px 20px;
             font-weight: 900;
             display: inline-block;
-            box-shadow: 0 4px 15px rgba(255, 143, 163, 0.2);
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
         }
         .helper-bubble::after {
             content: '';
@@ -97,7 +98,7 @@
             transform: translateX(-50%);
             border-width: 10px 10px 0;
             border-style: solid;
-            border-color: #ff8fa3 transparent transparent;
+            border-color: #ff4d6d transparent transparent;
         }
 
         #guide-zone.hide {
@@ -106,9 +107,9 @@
 
         .input-label {
             display: block;
-            font-size: 0.75rem;
-            font-weight: 900;
-            color: #ec4899;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #000766;
             margin-bottom: 0.25rem;
             text-align: center;
             text-transform: uppercase;
@@ -124,7 +125,7 @@
             <h1 id="lang-title" class="text-xl font-black text-sweet-pink-dark flex items-center gap-2">
                 <span class="material-symbols-rounded fill-1">calculate</span>邊個抵買啲？
             </h1>
-            <p id="lang-sub" class="text-xs font-black text-slate-400 tracking-wider">超市格價計算機</p>
+            <p id="lang-sub" class="text-xs font-black text-slate-400 tracking-wider">超巿格價計算機</p>
         </div>
         <button id="lang-btn" onclick="toggleLang()" class="bg-blue-500 text-white px-3 py-1 rounded-xl text-xs font-black shadow-md flex items-center gap-1">
             <span class="material-symbols-rounded text-xs">translate</span>EN
@@ -168,15 +169,15 @@
 
     const translations = {
         zh: { 
-            title: "邊個抵買啲？", sub: "超市格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
+            title: "邊個抵買啲？", sub: "超巿格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
             winning: "最抵買！", per: "每", itemLabel: "商品",
-            introDesc: "超市優惠眼花繚亂？大包裝係咪一定抵？唔緊要，只要輸入價錢與數量，我即時話你知邊件先係最抵！",
+            introDesc: "超市優惠眼花繚亂？大包裝係咪一定抵？<br/>唔緊要，輸入價錢與數量，<br/>我即時話你知邊件先係最抵！",
             guide1: "請輸入第一件商品 ✨", guide2: "好！再加多一件比比看 ⚖️",
             price: "價錢 ($)", qty: "數量/重量", unit: "單位", langBtn: "EN",
             units: [
+                { val: 1, type: "piece", text: "個 pcs" },
                 { val: 1, type: "weight", text: "克 g" }, { val: 1000, type: "weight", text: "公斤 kg" },
-                { val: 1, type: "liquid", text: "毫升 ml" }, { val: 1000, type: "liquid", text: "升 L" },
-                { val: 1, type: "piece", text: "個 pcs" }
+                { val: 1, type: "liquid", text: "毫升 ml" }, { val: 1000, type: "liquid", text: "升 L" }
             ]
         },
         en: { 
@@ -186,9 +187,9 @@
             guide1: "Enter 1st item price ✨", guide2: "Great! Add one more ⚖️",
             price: "Price ($)", qty: "Qty/Weight", unit: "Unit", langBtn: "中",
             units: [
+                { val: 1, type: "piece", text: "pcs" },
                 { val: 1, type: "weight", text: "g" }, { val: 1000, type: "weight", text: "kg" },
-                { val: 1, type: "liquid", text: "ml" }, { val: 1000, type: "liquid", text: "L" },
-                { val: 1, type: "piece", text: "pcs" }
+                { val: 1, type: "liquid", text: "ml" }, { val: 1000, type: "liquid", text: "L" }
             ]
         }
     };
@@ -242,7 +243,9 @@
         renderList();
         
         const scrollArea = document.getElementById('scroll-area');
-        scrollArea.scrollTop = scrollArea.scrollHeight;
+        setTimeout(() => {
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+        }, 50);
     }
 
     function renderList(winnerId = null) {
@@ -277,8 +280,9 @@
                 let displayUnit = item.isPiece ? item.pureUnit : (item.type === 'weight' ? 'g' : 'ml');
                 const suffix = `${t.per} ${baseVal}${displayUnit}`;
 
+                // 增加 data-id 方便尋找
                 listContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
+                    <div id="card-${item.id}" class="flex items-center justify-between bg-white p-4 rounded-3xl border-4 ${isWinner ? 'winner-glow' : 'border-pink-50'} shadow-sm transition-all">
                         <div class="flex items-center gap-4">
                             <div class="bg-slate-800 text-white w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm shrink-0 shadow-sm">${index + 1}</div>
                             <div>
@@ -305,7 +309,17 @@
     function compareAll() {
         if (items.length < 2) return;
         const minPrice = Math.min(...items.map(i => i.finalPrice));
-        renderList(items.find(i => i.finalPrice === minPrice).id);
+        const winner = items.find(i => i.finalPrice === minPrice);
+        
+        renderList(winner.id);
+
+        // 自動滾動到最抵買的卡片位置
+        setTimeout(() => {
+            const winnerElement = document.getElementById(`card-${winner.id}`);
+            if (winnerElement) {
+                winnerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     }
 
     function clearAll() { 
