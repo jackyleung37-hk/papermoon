@@ -6,7 +6,8 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SmartCalc">
+    <meta name="apple-mobile-web-app-title" content="超巿格價計算機">
+    
     <meta name="mobile-web-app-capable" content="yes">
     
     <link rel="apple-touch-icon" href="smartcalc.png">
@@ -200,7 +201,6 @@
         }
     };
 
-    // --- Cookie Helpers ---
     function setCookie(name, value, days) {
         let expires = "";
         if (days) {
@@ -222,7 +222,6 @@
         return null;
     }
 
-    // --- UI Logic ---
     function updateUnitSelect() {
         const uSel = document.getElementById('input-u');
         const t = translations[currentLang];
@@ -234,7 +233,6 @@
         ).join('');
     }
 
-    // 更新界面語言（不切換，僅渲染）
     function applyLangUI() {
         const t = translations[currentLang];
         document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">calculate</span>` + t.title;
@@ -249,7 +247,7 @@
 
     function toggleLang() {
         currentLang = currentLang === 'zh' ? 'en' : 'zh';
-        setCookie('app_lang', currentLang, 365); // 儲存選擇
+        setCookie('app_lang', currentLang, 365);
         applyLangUI();
     }
 
@@ -361,7 +359,6 @@
         renderList(); 
     }
 
-    // --- 初始化流程 ---
     function init() {
         const savedLang = getCookie('app_lang');
         if (savedLang && translations[savedLang]) {
