@@ -13,7 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff4d6d">
     
-    <title>SmartCalc - 超巿格價計算機</title>
+    <title>Price Calculator - 超巿格價計算機</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto-Sans+TC:wght@700;900&display=swap" rel="stylesheet"/>
@@ -133,7 +133,7 @@
             </h1>
             <p id="lang-sub" class="text-xs font-black text-slate-400 tracking-wider">超巿格價計算機</p>
         </div>
-        <button id="lang-btn" onclick="toggleLang()" class="bg-blue-500 text-white px-3 py-1 rounded-xl text-xs font-black shadow-md flex items-center gap-1">
+        <button id="lang-btn" onclick="toggleLang()" class="bg-blue-500 text-white px-3 py-1 rounded-xl text-xs font-black shadow-md flex items-center gap-1 active:scale-95 transition-transform">
             <span class="material-symbols-rounded text-xs">translate</span>EN
         </button>
     </div>
@@ -177,8 +177,8 @@
         zh: { 
             title: "邊個抵買啲？", sub: "超巿格價計算機", add: "加一件", compare: "立即格價", clear: "清除內容", 
             winning: "最抵買！", per: "每", itemLabel: "商品",
-            introDesc: "超市優惠眼花繚亂？大包裝係咪一定抵？<br/>唔緊要，輸入價錢與數量，<br/>我即時話你知邊件先係最抵！",
-            guide1: "請輸入第一件商品 ✨", guide2: "好！再加多一件比比看 ⚖️",
+            introDesc: "超市優惠眼花繚亂？<br/>大包裝係咪一定抵？<br/>唔緊要，輸入價錢與數量，<br/>我即時話你知邊件先係最抵！",
+            guide1: "請輸入第一件商品 ✨", guide2: "再輸入第二件商品作比較 ⚖️",
             price: "價錢 ($)", qty: "數量/重量", unit: "單位", langBtn: "EN",
             units: [
                 { val: 1, type: "piece", text: "個 pcs" },
@@ -200,6 +200,29 @@
         }
     };
 
+    // --- Cookie Helpers ---
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+    }
+
+    function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // --- UI Logic ---
     function updateUnitSelect() {
         const uSel = document.getElementById('input-u');
         const t = translations[currentLang];
@@ -211,8 +234,8 @@
         ).join('');
     }
 
-    function toggleLang() {
-        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+    // 更新界面語言（不切換，僅渲染）
+    function applyLangUI() {
         const t = translations[currentLang];
         document.getElementById('lang-title').innerHTML = `<span class="material-symbols-rounded">calculate</span>` + t.title;
         document.getElementById('lang-sub').innerText = t.sub;
@@ -222,6 +245,12 @@
         document.getElementById('lbl-unit').innerText = t.unit;
         updateUnitSelect();
         renderList();
+    }
+
+    function toggleLang() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        setCookie('app_lang', currentLang, 365); // 儲存選擇
+        applyLangUI();
     }
 
     function addNewItem() {
@@ -266,8 +295,8 @@
             guideZone.classList.remove('hide');
             helper.innerText = t.guide1;
             listContainer.innerHTML = `
-                <div class="flex items-center justify-center min-h-[40vh] px-8">
-                    <p class="text-slate-800 font-bold leading-relaxed text-center">
+                <div class="flex items-center justify-center min-h-[40vh] px-6">
+                    <p class="text-slate-700 text-xl font-bold leading-relaxed text-center">
                         ${t.introDesc}
                     </p>
                 </div>`;
@@ -318,7 +347,6 @@
         
         renderList(winner.id);
 
-        // 自動滾動到最抵買的卡片位置 (Block center 確保出現在畫面中央)
         setTimeout(() => {
             const winnerElement = document.getElementById(`card-${winner.id}`);
             if (winnerElement) {
@@ -333,8 +361,16 @@
         renderList(); 
     }
 
-    updateUnitSelect();
-    renderList();
+    // --- 初始化流程 ---
+    function init() {
+        const savedLang = getCookie('app_lang');
+        if (savedLang && translations[savedLang]) {
+            currentLang = savedLang;
+        }
+        applyLangUI();
+    }
+
+    init();
 </script>
 </body>
 </html>
