@@ -322,35 +322,46 @@ letter-spacing: 0.5px; /* 增加字距讓它更精緻 */
         applyLangUI();
     }
 
-    function addNewItem() {
-        const pInput = document.getElementById('input-p');
-        const qInput = document.getElementById('input-q');
-        const uSel = document.getElementById('input-u');
-        const p = parseFloat(pInput.value);
-        const q = parseFloat(qInput.value);
-        if (isNaN(p) || isNaN(q) || p <= 0 || q <= 0) return;
+function addNewItem() {
+    const pInput = document.getElementById('input-p');
+    const qInput = document.getElementById('input-q');
+    const uSel = document.getElementById('input-u');
+    const p = parseFloat(pInput.value);
+    const q = parseFloat(qInput.value);
+    
+    if (isNaN(p) || isNaN(q) || p <= 0 || q <= 0) return;
 
-        const u = parseFloat(uSel.value);
-        const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
-        const unitLabel = uSel.options[uSel.selectedIndex].text;
-        const isPiece = (type === 'piece');
-        const multiplier = isPiece ? 1 : 100;
-        const finalPrice = (p / (q * u)) * multiplier;
+    const u = parseFloat(uSel.value);
+    const type = uSel.options[uSel.selectedIndex].getAttribute('data-type');
+    const unitLabel = uSel.options[uSel.selectedIndex].text;
+    const isPiece = (type === 'piece');
+    const multiplier = isPiece ? 1 : 100;
+    const finalPrice = (p / (q * u)) * multiplier;
 
-        items.push({ 
-            p, q, unitLabel, type, finalPrice, id: Date.now(), 
-            pureUnit: unitLabel.split(' ').pop(), isPiece 
-        });
-        
-        pInput.value = ''; qInput.value = '';
-        updateUnitSelect();
+    items.push({ 
+        p, q, unitLabel, type, finalPrice, id: Date.now(), 
+        pureUnit: unitLabel.split(' ').pop(), isPiece 
+    });
+    
+    pInput.value = ''; 
+    qInput.value = '';
+    updateUnitSelect();
+    
+    // 關鍵邏輯：
+    // 如果剛好是第二件，自動執行格價
+    if (items.length === 2) {
+        compareAll();
+    } else {
+        // 如果是第一件、或者第三件或以上，只更新清單而不標記勝出者
         renderList();
-        
-        const scrollArea = document.getElementById('scroll-area');
-        setTimeout(() => {
-            scrollArea.scrollTop = scrollArea.scrollHeight;
-        }, 50);
     }
+    
+    // 確保滾動到最新加入的項目
+    const scrollArea = document.getElementById('scroll-area');
+    setTimeout(() => {
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+    }, 50);
+}
 
     function renderList(winnerIds = []) {
         const listContainer = document.getElementById('item-list');
@@ -431,15 +442,17 @@ clearContainer.innerHTML = items.length >= 1 ? `
     </button>` : '';
     }
 
-    function compareAll() {
-        if (items.length < 2) return;
-        const minPrice = Math.min(...items.map(i => i.finalPrice));
-        const winnerIds = items
-            .filter(i => Math.abs(i.finalPrice - minPrice) < 0.001)
-            .map(i => i.id);
-        
-        renderList(winnerIds);
+function compareAll(shouldScroll = false) { // 增加一個參數控制要不要滾動
+    if (items.length < 2) return;
+    const minPrice = Math.min(...items.map(i => i.finalPrice));
+    const winnerIds = items
+        .filter(i => Math.abs(i.finalPrice - minPrice) < 0.001)
+        .map(i => i.id);
+    
+    renderList(winnerIds);
 
+    // 只有在手動點擊按鈕或特定情況下才滾動
+    if (shouldScroll) {
         setTimeout(() => {
             const firstWinner = document.getElementById(`card-${winnerIds[0]}`);
             if (firstWinner) {
@@ -447,6 +460,7 @@ clearContainer.innerHTML = items.length >= 1 ? `
             }
         }, 100);
     }
+}
 
     function clearAll() { 
         const t = translations[currentLang];
